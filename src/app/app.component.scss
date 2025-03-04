@@ -1,0 +1,18 @@
+mat-sidenav-container {
+  height: 100vh;
+}
+
+mat-sidenav {
+  width: 192px;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+mat-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.mat-toolbar-row, .mat-toolbar-single-row {
+  height: 56px;
+}

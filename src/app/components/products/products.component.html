@@ -1,0 +1,167 @@
+<div class="page-container">
+  <!-- Product Dashboard Section -->
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">Product Dashboard</h1>
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-info">
+          <h2 class="stat-number">350</h2>
+          <p class="stat-label">Required Replenished</p>
+        </div>
+        <div class="stat-icon">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h2 class="stat-number">350</h2>
+          <p class="stat-label">Sufficiently Stocked</p>
+        </div>
+        <div class="stat-icon">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h2 class="stat-number">350</h2>
+          <p class="stat-label">Min. Movement Products</p>
+        </div>
+        <div class="stat-icon">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Divider Space -->
+  <div class="section-divider"></div>
+
+  <!-- Material List Section -->
+  <div class="list-header">
+    <h2 class="list-title">Material List</h2>
+    
+    <div class="header-actions">
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Search Customer ID, Code, Name"
+          class="search-input"
+        >
+        <button class="search-button">
+          <mat-icon>search</mat-icon>
+        </button>
+      </div>
+
+      <button class="filter-button" mat-icon-button>
+        <mat-icon>filter_list</mat-icon>
+      </button>
+
+      <button 
+        class="create-button" 
+        mat-raised-button 
+        color="primary"
+        (click)="navigateToCreate()"
+      >
+        <mat-icon>add</mat-icon>
+        Create Product
+      </button>
+    </div>
+  </div>
+
+  <!-- Material List Table -->
+  <div class="table-container">
+    <table class="material-table">
+      <thead>
+        <tr>
+          <th>S No</th>
+          <th>Material Name</th>
+          <th>HSN Code</th>
+          <th>Material Category</th>
+          <th>Description</th>
+          <th>Quantity</th>
+          <th>Unit of Measurement</th>
+          <th>Location ID</th>
+          <th>Date Added</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of dataSource; let i = index">
+          <td>{{item.sNo}}</td>
+          <td>
+            <a href="#" class="material-link">{{item.materialName}}</a>
+          </td>
+          <td>{{item.materialCode}}</td>
+          <td>{{item.materialCategory}}</td>
+          <td>{{item.description}}</td>
+          <td>{{item.quantity}}</td>
+          <td>{{item.unitOfMeasurement}}</td>
+          <td>{{item.locationId}}</td>
+          <td>{{item.dateAdded}}</td>
+          <td class="action-column">
+            <div class="action-buttons">
+              <button mat-icon-button color="primary" (click)="onEdit(item)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteRow(i, item)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.action-column {
+  white-space: nowrap;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-buttons button {
+  min-width: 36px;
+  padding: 0;
+  line-height: 36px;
+}
+
+.action-buttons .mat-icon {
+  font-size: 20px;
+}
+
+.action-buttons button[color="primary"] {
+  color: #1976d2;
+}
+
+.action-buttons button[color="warn"] {
+  color: #dc3545;
+}
+
+.material-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.material-table th,
+.material-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.material-table th {
+  background-color: #f5f5f5;
+  font-weight: 500;
+}
+
+.material-table tr:hover {
+  background-color: #f8f9fa;
+}
+</style>
