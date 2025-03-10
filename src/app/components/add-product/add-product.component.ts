@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarConfig, MatSnackBarHorizontalPosition, MatSnackBarModule, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
 import { ProductsService } from '../../services/product.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -34,285 +34,289 @@ interface SubProduct {
     MatTableModule
   ],
   template: `
-    <div class="product-form-container">
-      <h2 class="form-title" style="color: blue; margin-top: 0px;">Add Product</h2>
+    <!-- Main Add Product Container -->
+    <div class="main-container">
+      <div class="header-container">
+        <h2 class="form-title" style="color: blue; margin-top: 0px;">{{ isEditMode ? 'Edit Product' : 'Add Product' }}</h2>
+        <button class="back-button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back
+        </button>
+      </div>
       
       <form #productForm="ngForm" (ngSubmit)="onSubmit(productForm)">
-        <!-- Product Details Container -->
-        <div class="product-details-container">
-          <h2 class="form-title" style="color: black; margin-top: 0px;">Product 1</h2>
-          
-          <div class="form-grid">
-            <!-- Row 1 -->
-            <div class="form-group">
-              <label>HSN Code</label>
-              <select [(ngModel)]="product.hsnCode" name="hsnCode">
-                <option value="">Select HSN Code</option>
-                <option value="code1">Code 1</option>
-                <option value="code2">Code 2</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label> Master Product</label>
-              <input type="text" [(ngModel)]="product.Product" name="masterProduct" 
-                     placeholder="Product Name" class="gray-bg">
-            </div>
-
-            <div class="form-group">
-              <label>ProductCategory</label>
-              <input type="text" [(ngModel)]="product.ProductCategory" name="ProductCategory" 
-                     placeholder="ProductCategory" class="gray-bg">
-            </div>
-
-            <div class="form-group">
-              <label>UOM</label>
-              <select [(ngModel)]="product.uom" name="uom">
-                <option value="">Select UOM</option>
-                <option value="kg">Kilogram</option>
-                <option value="unit">Unit</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Bin Location</label>
-              <input type="text" [(ngModel)]="product.binLocation" name="binLocation" 
-                     placeholder="Bin Location">
-            </div>
-
-            <!-- Row 2 -->
-            <div class="form-group">
-              <label>Unit Price</label>
-              <input type="number" [(ngModel)]="product.unitPrice" name="unitPrice" 
-                     placeholder="Enter Unit Price" (input)="calculateValues()">
-            </div>
-
-            <div class="form-group">
-              <label>Landing Charges %</label>
-              <input type="number" [(ngModel)]="product.landingChargesPercent" name="landingChargesPercent" 
-                     placeholder="Enter Percentage Value" (input)="calculateValues()">
-            </div>
-
-            <div class="form-group">
-              <label>Landing Charges</label>
-              <input type="number" [(ngModel)]="product.landingCharges" name="landingCharges" 
-                     placeholder="Enter Charges Value" readonly class="calculated-field">
-            </div>
-
-            <div class="form-group">
-              <label>Cost Of Product</label>
-              <input type="number" [(ngModel)]="product.costOfProduct" name="costOfProduct" 
-                     placeholder="Enter Product Cost" readonly class="calculated-field">
-            </div>
-
-            <div class="form-group">
-              <label>Profit %</label>
-              <input type="number" [(ngModel)]="product.profitPercent" name="profitPercent" 
-                     placeholder="Enter Percentage" (input)="calculateTargetedSellingPrice()">
-            </div>
-
-            <!-- Row 3 -->
-            <div class="form-group">
-              <label>Targeted Selling Price</label>
-              <input type="number" [(ngModel)]="product.targetedSellingPrice" name="targetedSellingPrice" 
-                     placeholder="Selling Price" readonly class="calculated-field">
-            </div>
-
-            <div class="form-group">
-              <label>GST Applicable</label>
-              <select [(ngModel)]="product.gstApplicable" name="gstApplicable">
-                <option value="">Select GST Applicable</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>IGST %</label>
-              <input type="number" [(ngModel)]="product.igstPercent" name="igstPercent" 
-                     placeholder="Enter Percentage Value">
-            </div>
-
-            <div class="form-group">
-              <label>CGST %</label>
-              <input type="number" [(ngModel)]="product.cgstPercent" name="cgstPercent" 
-                     placeholder="Enter Percentage Value">
-            </div>
-
-            <div class="form-group">
-              <label>SGST %</label>
-              <input type="number" [(ngModel)]="product.sgstPercent" name="sgstPercent" 
-                     placeholder="Enter Percentage Value">
-            </div>
-
-            <!-- Row 4 -->
-            <div class="form-group">
-              <label>Stock Keeping Unit</label>
-              <input type="text" [(ngModel)]="product.stockKeepingUnit" name="stockKeepingUnit" 
-                     placeholder="Enter Stock Keeping Unit">
-            </div>
-
-            <div class="form-group">
-              <label>Latest Unit Price</label>
-              <input type="number" [(ngModel)]="product.latestUnitPrice" name="latestUnitPrice" 
-                     placeholder="Enter Unit Price">
-            </div>
-
-            <div class="form-group">
-              <label>Latest PO Date</label>
-              <input type="date" [(ngModel)]="product.latestPODate" name="latestPODate">
-            </div>
-
-            <div class="form-group">
-              <label>Latest PO Number</label>
-              <input type="text" [(ngModel)]="product.latestPONumber" name="latestPONumber" 
-                     placeholder="Enter PO Number">
-            </div>
-
-            <div class="form-group">
-              <label>Opening Stock</label>
-              <input type="number" [(ngModel)]="product.openingStock" name="openingStock" 
-                     placeholder="Enter Opening Stock Count">
-            </div>
-
-            <!-- Row 5 -->
-            <div class="form-group">
-              <label>Current Quantity</label>
-              <input type="number" [(ngModel)]="product.currentQuantity" name="currentQuantity" 
-                     placeholder="Enter Current Quantity Count">
-            </div>
-
-            <div class="form-group">
-              <label>Threshold Quantity</label>
-              <input type="number" [(ngModel)]="product.thresholdQuantity" name="thresholdQuantity" 
-                     placeholder="Enter Threshold Quantity">
-            </div>
-
-            <div class="form-group">
-              <label>Stock Level Alert</label>
-              <select [(ngModel)]="product.stockLevelAlert" name="stockLevelAlert">
-                <option value="">Select Level Alert</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-
-            <div class="form-group span-2">
-              <label>Product Description</label>
-              <input type="text" [(ngModel)]="product.productDescription" name="productDescription" 
-                     placeholder="Enter Product Description">
-            </div>
+        <!-- Product 1 Container Box -->
+        <div class="product-container">
+          <div class="product-header">
+            <h2 class="form-title" style="color: black; margin-top: 0px;">Product 1</h2>
           </div>
-            
-          <div class="images-subproduct-container">
-            <label>Product Images</label>
-            <div class="image-upload-row">
-              <div class="image-upload-container">
-                <!-- Show image preview if available -->
-                <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" class="image-preview" alt="Product preview">
-                
-                <!-- Show upload UI if no image -->
-                <div class="upload-content" *ngIf="!imagePreviewUrl">
-                  <mat-icon>cloud_upload</mat-icon>
-                  <p>Browse and choose the image you want to upload from your computer</p>
-                  <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept="image/*">
-                  <button type="button" (click)="fileInput.click()" class="upload-button">
-                    Choose File
+
+          <!-- Product Details Container -->
+          <div class="product-details-container">
+            <div class="form-grid">
+              <!-- Row 1 -->
+              <div class="form-group">
+                <label>HSN Code</label>
+                <input type="text" [(ngModel)]="product.hsnCode" name="hsnCode" required>
+              </div>
+
+              <div class="form-group">
+                <label> Master Product</label>
+                <input type="text" [(ngModel)]="product.Product" name="masterProduct" 
+                       placeholder="Product Name" class="gray-bg" required>
+              </div>
+
+              <div class="form-group">
+                <label>ProductCategory</label>
+                <input type="text" [(ngModel)]="product.ProductCategory" name="ProductCategory" 
+                       placeholder="ProductCategory" class="gray-bg" required>
+              </div>
+
+              <div class="form-group">
+                <label>UOM</label>
+                <input type="text" [(ngModel)]="product.uom" name="uom" required>
+              </div>
+
+              <div class="form-group">
+                <label>Bin Location</label>
+                <input type="text" [(ngModel)]="product.binLocation" name="binLocation" 
+                       placeholder="Bin Location" required>
+              </div>
+
+              <!-- Row 2 -->
+              <div class="form-group">
+                <label>Unit Price</label>
+                <input type="number" [(ngModel)]="product.unitPrice" name="unitPrice" 
+                       placeholder="Enter Unit Price" (input)="calculateValues()" required>
+              </div>
+
+              <div class="form-group">
+                <label>Landing Charges %</label>
+                <input type="number" [(ngModel)]="product.landingChargesPercent" name="landingChargesPercent" 
+                       placeholder="Enter Percentage Value" (input)="calculateValues()">
+              </div>
+
+              <div class="form-group">
+                <label>Landing Charges</label>
+                <input type="number" [(ngModel)]="product.landingCharges" name="landingCharges" 
+                       placeholder="Enter Charges Value" readonly class="calculated-field">
+              </div>
+
+              <div class="form-group">
+                <label>Cost Of Product</label>
+                <input type="number" [(ngModel)]="product.costOfProduct" name="costOfProduct" 
+                       placeholder="Enter Product Cost" readonly class="calculated-field">
+              </div>
+
+              <div class="form-group">
+                <label>Profit %</label>
+                <input type="number" [(ngModel)]="product.profitPercent" name="profitPercent" 
+                       placeholder="Enter Percentage" (input)="calculateTargetedSellingPrice()">
+              </div>
+
+              <!-- Row 3 -->
+              <div class="form-group">
+                <label>Targeted Selling Price</label>
+                <input type="number" [(ngModel)]="product.targetedSellingPrice" name="targetedSellingPrice" 
+                       placeholder="Selling Price" readonly class="calculated-field">
+              </div>
+
+              <div class="form-group">
+                <label>GST Applicable</label>
+                <select [(ngModel)]="product.gstApplicable" name="gstApplicable">
+                  <option value="">Select GST Applicable</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>IGST %</label>
+                <input type="number" [(ngModel)]="product.igstPercent" name="igstPercent" 
+                       placeholder="Enter Percentage Value">
+              </div>
+
+              <div class="form-group">
+                <label>CGST %</label>
+                <input type="number" [(ngModel)]="product.cgstPercent" name="cgstPercent" 
+                       placeholder="Enter Percentage Value">
+              </div>
+
+              <div class="form-group">
+                <label>SGST %</label>
+                <input type="number" [(ngModel)]="product.sgstPercent" name="sgstPercent" 
+                       placeholder="Enter Percentage Value">
+              </div>
+
+              <!-- Row 4 -->
+              <div class="form-group">
+                <label>Stock Keeping Unit</label>
+                <input type="text" [(ngModel)]="product.stockKeepingUnit" name="stockKeepingUnit" 
+                       placeholder="Enter Stock Keeping Unit">
+              </div>
+
+              <div class="form-group">
+                <label>Latest Unit Price</label>
+                <input type="number" [(ngModel)]="product.latestUnitPrice" name="latestUnitPrice" 
+                       placeholder="Enter Unit Price">
+              </div>
+
+              <div class="form-group">
+                <label>Latest PO Date</label>
+                <input type="date" [(ngModel)]="product.latestPODate" name="latestPODate">
+              </div>
+
+              <div class="form-group">
+                <label>Latest PO Number</label>
+                <input type="text" [(ngModel)]="product.latestPONumber" name="latestPONumber" 
+                       placeholder="Enter PO Number">
+              </div>
+
+              <div class="form-group">
+                <label>Opening Stock</label>
+                <input type="number" [(ngModel)]="product.openingStock" name="openingStock" 
+                       placeholder="Enter Opening Stock Count">
+              </div>
+
+              <!-- Row 5 -->
+              <div class="form-group">
+                <label>Current Quantity</label>
+                <input type="number" [(ngModel)]="product.currentQuantity" name="currentQuantity" 
+                       placeholder="Enter Current Quantity Count">
+              </div>
+
+              <div class="form-group">
+                <label>Threshold Quantity</label>
+                <input type="number" [(ngModel)]="product.thresholdQuantity" name="thresholdQuantity" 
+                       placeholder="Enter Threshold Quantity">
+              </div>
+
+              <div class="form-group">
+                <label>Stock Level Alert</label>
+                <select [(ngModel)]="product.stockLevelAlert" name="stockLevelAlert">
+                  <option value="">Select Level Alert</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div class="form-group span-2">
+                <label>Product Description</label>
+                <input type="text" [(ngModel)]="product.productDescription" name="productDescription" 
+                       placeholder="Enter Product Description">
+              </div>
+            </div>
+              
+            <div class="images-subproduct-container">
+              <label>Product Images</label>
+              <div class="image-upload-row">
+                <div class="image-upload-container">
+                  <!-- Show image preview if available -->
+                  <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" class="image-preview" alt="Product preview">
+                  
+                  <!-- Show upload UI if no image -->
+                  <div class="upload-content" *ngIf="!imagePreviewUrl">
+                    <mat-icon>cloud_upload</mat-icon>
+                    <p>Browse and choose the image you want to upload from your computer</p>
+                    <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept="image/*">
+                    <button type="button" (click)="fileInput.click()" class="upload-button">
+                      Choose File
+                    </button>
+                  </div>
+
+                  <!-- Show remove button if image exists -->
+                  <button *ngIf="imagePreviewUrl" 
+                          type="button" 
+                          class="remove-image-button"
+                          (click)="removeImage()">
+                    <mat-icon>delete</mat-icon>
                   </button>
                 </div>
-
-                <!-- Show remove button if image exists -->
-                <button *ngIf="imagePreviewUrl" 
-                        type="button" 
-                        class="remove-image-button"
-                        (click)="removeImage()">
-                  <mat-icon>delete</mat-icon>
+                <button type="button" (click)="addSubProduct()" class="add-sub-product-button" style="margin-left: 10px;">
+                  Master Name <span class="plus-icon">+</span>
                 </button>
               </div>
-              <button type="button" (click)="addSubProduct()" class="add-sub-product-button" style="margin-left: 10px;">
-                Master Name <span class="plus-icon">+</span>
-              </button>
             </div>
-          </div>
-        </div><!-- End Product Details Container -->
-        
-        <div class="sub-products-container" *ngIf="showSubProducts">
-          <table class="sub-products-table">
-            <thead>
-              <tr>
-                <th>S No</th>
-                <th>Master Name</th>
-                <th>Sub Material Name</th>
-                <th>Description</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of subProducts; let i = index">
-                <td>{{i + 1}}</td>
-                <td>
-                  <input 
-                    type="text" 
-                    [value]="item.masterName"
-                    class="editable-input master-name"
-                    readonly
-                    disabled
-                  >
-                </td>
-                <td>
-                  <input 
-                    type="text" 
-                    [(ngModel)]="item.materialName" 
-                    name="materialName{{i}}" 
-                   
-                    placeholder="Enter material name">
-                </td>
-                <td>
-                  <input 
-                    type="text" 
-                    [(ngModel)]="item.description" 
-                    name="description{{i}}" 
-                    class="editable-input"
-                    placeholder="Enter description">
-                </td>
-                <td>
-                  <button class="delete-button" (click)="deleteSubProduct(item.id)">
-                    <mat-icon class="delete-icon">delete</mat-icon>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          </div><!-- End Product Details Container -->
+          
+          <div class="sub-products-container" *ngIf="showSubProducts">
+            <table class="sub-products-table">
+              <thead>
+                <tr>
+                  <th>S No</th>
+                  <th>Master Name</th>
+                  <th>Sub Material Name</th>
+                  <th>Description</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of subProducts; let i = index">
+                  <td>{{i + 1}}</td>
+                  <td>
+                    <input 
+                      type="text" 
+                      [value]="item.masterName"
+                      class="editable-input master-name"
+                      readonly
+                      disabled
+                    >
+                  </td>
+                  <td>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="item.materialName" 
+                      name="materialName{{i}}" 
+                     
+                      placeholder="Enter material name">
+                  </td>
+                  <td>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="item.description" 
+                      name="description{{i}}" 
+                      class="editable-input"
+                      placeholder="Enter description">
+                  </td>
+                  <td>
+                    <button class="delete-button" (click)="deleteSubProduct(item.id)">
+                      <mat-icon class="delete-icon">delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-          <!-- Add New button and input section -->
-          <div class="add-new-section">
-            <div class="add-new-container">
-              <button class="add-new-button" (click)="addNewSubProduct()">
-                Add New <span class="plus-icon">+</span>
-              </button>
-            </div>
-
-            <!-- Input box that appears when Add New is clicked -->
-            <div *ngIf="showNewInput" class="new-item-input-container">
-              <input 
-                type="text" 
-                [(ngModel)]="newItemName"
-                placeholder="Enter item name"
-                class="new-item-input"
-                (keyup.enter)="saveNewItem()"
-              >
-              <div class="button-group">
-                <button (click)="saveNewItem()" class="save-btn">Save</button>
-                <button (click)="cancelNewItem()" class="cancel-btn">Cancel</button>
+            <!-- Add New button and input section -->
+            <div class="add-new-section">
+              <div class="add-new-container">
+                <button class="add-new-button" (click)="addNewSubProduct()">
+                  Add New <span class="plus-icon">+</span>
+                </button>
               </div>
-            </div>
 
-            <!-- Display added items -->
-            <div class="items-list">
-              <div *ngFor="let item of subProducts; let i = index" class="item-row">
-                <span>{{ item }}</span>
-                <button (click)="removeItem(i)" class="remove-btn">×</button>
+              <!-- Input box that appears when Add New is clicked -->
+              <div *ngIf="showNewInput" class="new-item-input-container">
+                <input 
+                  type="text" 
+                  [(ngModel)]="newItemName"
+                  placeholder="Enter item name"
+                  class="new-item-input"
+                  (keyup.enter)="saveNewItem()"
+                >
+                <div class="button-group">
+                  <button (click)="saveNewItem()" class="save-btn">Save</button>
+                  <button (click)="cancelNewItem()" class="cancel-btn">Cancel</button>
+                </div>
+              </div>
+
+              <!-- Display added items -->
+              <div class="items-list">
+                <div *ngFor="let item of subProducts; let i = index" class="item-row">
+                  <span>{{ item }}</span>
+                  <button (click)="removeItem(i)" class="remove-btn">×</button>
+                </div>
               </div>
             </div>
           </div>
@@ -327,13 +331,36 @@ interface SubProduct {
             type="submit" 
             [disabled]="!canSubmit()"
             class="submit-button">
-            Save
+            {{ isEditMode ? 'Update Product' : 'Add Product' }}
           </button>
         </div>
       </form>
     </div>
   `,
   styles: [`
+    .main-container {
+      background-color: #ffffff;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-container {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 15px 0;
+    }
+
+    .product-header {
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+    }
+
     .product-form-container {
       padding: 1rem;
       max-width: 1200px;
@@ -737,10 +764,90 @@ interface SubProduct {
     .span-2 {
       grid-column: span 2;
     }
+
+    /* Add these new styles */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 16px;
+      background-color: rgb(38, 48, 184);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+      transition: background-color 0.3s;
+    }
+
+    .back-button:hover {
+      background-color: rgb(31, 39, 145);
+      color: white;
+    }
+
+    /* Custom Notification Styles */
+    ::ng-deep .custom-notification {
+      margin-top: 100px !important;
+      min-width: 400px !important;
+    }
+
+    ::ng-deep .success-notification {
+      background-color: white !important;
+      color: black !important;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    ::ng-deep .success-notification .mat-mdc-snack-bar-label {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      font-size: 16px !important;
+    }
+
+    ::ng-deep .success-notification .mat-mdc-snack-bar-label::before {
+      content: '' !important;
+      display: inline-block !important;
+      width: 24px !important;
+      height: 24px !important;
+      background-color: #1976d2 !important;
+      border-radius: 50% !important;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>') !important;
+      background-size: 16px !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+    }
+
+    ::ng-deep .success-notification .mdc-snackbar__surface {
+      background-color: white !important;
+      color: black !important;
+      padding: 14px 20px !important;
+      border-radius: 4px !important;
+    }
+
+    ::ng-deep .success-notification .mat-mdc-snack-bar-actions {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    ::ng-deep .success-notification .mdc-button {
+      color: #1976d2 !important;
+    }
+
+    ::ng-deep .error-notification {
+      background-color: #f44336 !important;
+      color: white !important;
+    }
   `]
 })
 export class AddProductComponent implements OnInit {
-  product = {
+  product: any = {
+    id: null,
     hsnCode: '',
     Product: '',
     ProductCategory: '',
@@ -765,7 +872,7 @@ export class AddProductComponent implements OnInit {
     thresholdQuantity: '',
     stockLevelAlert: '',
     productDescription: '',
-    productImage: null as File | null
+    productImage: null
   };
 
   subProducts: SubProduct[] = [];
@@ -777,27 +884,33 @@ export class AddProductComponent implements OnInit {
   isLoading = false;
   showNewInput: boolean = false;
   newItemName: string = '';
+  isEditMode: boolean = false;
+  productId: number | null = null;
 
   constructor(
     private http: HttpClient,
     private router: Router,
     private snackBar: MatSnackBar,
-    private productService: ProductsService
+    private productService: ProductsService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
-    // Optional: Remove this if you don't want to check connection on init
-    // this.checkServerConnection();
+    this.route.params.subscribe(params => {
+      if (params['product']) {
+        this.product = JSON.parse(params['product']);
+        this.productId = this.product.id;
+        this.isEditMode = true;
+      }
+    });
   }
 
   onFileSelected(event: Event) {
     const element = event.target as HTMLInputElement;
     const file = element.files?.[0];
     if (file) {
-      // Save the file
       this.product.productImage = file;
       
-      // Create preview URL
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagePreviewUrl = e.target.result;
@@ -811,40 +924,27 @@ export class AddProductComponent implements OnInit {
     this.imagePreviewUrl = null;
   }
 
-  /**
-   * Calculates landing charges based on unit price and landing charges percentage
-   * Also calculates the cost of product (unit price + landing charges)
-   */
   calculateValues() {
     if (this.product.unitPrice && this.product.landingChargesPercent) {
       const unitPrice = parseFloat(this.product.unitPrice);
       const landingChargesPercent = parseFloat(this.product.landingChargesPercent);
       
       if (!isNaN(unitPrice) && !isNaN(landingChargesPercent)) {
-        // Calculate landing charges
         const landingCharges = (unitPrice * landingChargesPercent) / 100;
         this.product.landingCharges = landingCharges.toFixed(2);
         
-        // Calculate cost of product
         const costOfProduct = unitPrice + landingCharges;
         this.product.costOfProduct = costOfProduct.toFixed(2);
-        
-        // Calculate targeted selling price if profit percentage is set
-        this.calculateTargetedSellingPrice();
       }
     }
   }
 
-  /**
-   * Calculates targeted selling price based on cost of product and profit percentage
-   */
   calculateTargetedSellingPrice() {
     if (this.product.costOfProduct && this.product.profitPercent) {
       const costOfProduct = parseFloat(this.product.costOfProduct);
       const profitPercent = parseFloat(this.product.profitPercent);
       
       if (!isNaN(costOfProduct) && !isNaN(profitPercent)) {
-        // Calculate targeted selling price
         const profitAmount = (costOfProduct * profitPercent) / 100;
         const targetedSellingPrice = costOfProduct + profitAmount;
         this.product.targetedSellingPrice = targetedSellingPrice.toFixed(2);
@@ -853,76 +953,41 @@ export class AddProductComponent implements OnInit {
   }
 
   onSubmit(form: any) {
-    // Check if required fields are filled
-    if (!this.validateForm()) {
-      this.showNotification('Please fill all required fields', 'error');
-      return;
+    if (this.isEditMode) {
+      this.productService.updateProduct(this.productId!, this.product).subscribe({
+        next: () => {
+          this.showNotification('Product updated successfully', 'success');
+          this.router.navigate(['/products']);
+        },
+        error: (err) => {
+          console.error('Error updating product:', err);
+          this.showNotification('Error updating product: ' + (err.error?.message || 'Unknown error'), 'error');
+        }
+      });
+    } else {
+      this.productService.addProduct(this.product).subscribe({
+        next: () => {
+          this.showNotification('Product added successfully', 'success');
+          this.router.navigate(['/products']);
+        },
+        error: (err) => {
+          console.error('Error adding product:', err);
+          this.showNotification('Error adding product: ' + (err.error?.message || 'Unknown error'), 'error');
+        }
+      });
     }
-
-    this.isSubmitting = true;
-
-    // Create product data object
-    const productData = {
-      id: Date.now(),
-      sNo: this.getNextSerialNumber(),
-      materialName: this.product.Product,
-      materialCode: this.product.hsnCode,
-      materialCategory: this.product.ProductCategory,
-      description: this.product.productDescription,
-      quantity: this.product.currentQuantity,
-      unitOfMeasurement: this.product.uom,
-      locationId: this.product.binLocation,
-      dateAdded: new Date().toISOString(),
-      imageUrl: this.imagePreviewUrl,
-      unitPrice: this.product.unitPrice,
-      landingChargesPercent: this.product.landingChargesPercent,
-      landingCharges: this.product.landingCharges,
-      costOfProduct: this.product.costOfProduct,
-      profitPercent: this.product.profitPercent,
-      targetedSellingPrice: this.product.targetedSellingPrice,
-      gstApplicable: this.product.gstApplicable,
-      igstPercent: this.product.igstPercent,
-      cgstPercent: this.product.cgstPercent,
-      sgstPercent: this.product.sgstPercent,
-      stockKeepingUnit: this.product.stockKeepingUnit,
-      latestUnitPrice: this.product.latestUnitPrice,
-      latestPODate: this.product.latestPODate,
-      latestPONumber: this.product.latestPONumber,
-      openingStock: this.product.openingStock,
-      thresholdQuantity: this.product.thresholdQuantity,
-      stockLevelAlert: this.product.stockLevelAlert
-    };
-
-    // Only proceed if validation passes
-    if (this.validateForm()) {
-      const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
-      existingProducts.push(productData);
-      localStorage.setItem('products', JSON.stringify(existingProducts));
-
-      setTimeout(() => {
-        this.showNotification('Product saved successfully!', 'success');
-        this.isSubmitting = false;
-        this.router.navigate(['/products']);
-      }, 1000);
-    }
-  }
-
-  private getNextSerialNumber(): number {
-    const products = JSON.parse(localStorage.getItem('products') || '[]');
-    return products.length + 1;
   }
 
   private showNotification(message: string, type: 'success' | 'error') {
-    this.snackBar.open(message, 'Close', {
+    this.snackBar.open(message, 'OK', {
       duration: 3000,
-      horizontalPosition: 'right',
-      verticalPosition: 'top',
-      panelClass: type === 'success' ? ['success-notification'] : ['error-notification']
+      panelClass: type === 'success' ? 'success-notification' : 'error-notification'
     });
   }
 
   onReset() {
     this.product = {
+      id: null,
       hsnCode:'',
       Product: '',
       ProductCategory: '',
@@ -950,7 +1015,7 @@ export class AddProductComponent implements OnInit {
       productImage: null
     };
     this.imagePreviewUrl = null;
-    this.subProducts = []; // Clear all temporary data
+    this.subProducts = [];
     this.showSubProducts = false;
   }
 
@@ -997,9 +1062,7 @@ export class AddProductComponent implements OnInit {
     this.showSubProducts = true;
   }
 
-  // Add validation method
   private validateForm(): boolean {
-    // Check required fields
     if (!this.product.Product || 
         !this.product.hsnCode || 
         !this.product.ProductCategory || 
@@ -1011,14 +1074,12 @@ export class AddProductComponent implements OnInit {
       return false;
     }
 
-    // Validate numeric fields
     if (isNaN(Number(this.product.unitPrice)) || 
         isNaN(Number(this.product.currentQuantity)) || 
         isNaN(Number(this.product.thresholdQuantity))) {
       return false;
     }
 
-    // Validate numeric values are positive
     if (Number(this.product.unitPrice) <= 0 || 
         Number(this.product.currentQuantity) < 0 || 
         Number(this.product.thresholdQuantity) < 0) {
@@ -1028,12 +1089,15 @@ export class AddProductComponent implements OnInit {
     return true;
   }
 
-  // Add method to check if form can be submitted
   canSubmit(): boolean {
     return this.validateForm() && !this.isSubmitting;
   }
 
   removeItem(index: number) {
-    this.subProducts.splice(index, 1);
-}
+    this.subProducts.splice(index, 1);
+  }
+
+  goBack() {
+    this.router.navigate(['/products']);
+  }
 }

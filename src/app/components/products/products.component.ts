@@ -170,15 +170,13 @@ interface DashboardStats {
 
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef> Action </th>
-            <td mat-cell *matCellDef="let row; let i = index">
-              <div class="action-buttons">
-                <button mat-icon-button color="primary" (click)="onEdit(row)">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteRow(i, row)">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button color="primary" (click)="onEdit(row)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteRow(i, row)">
+                <mat-icon>delete</mat-icon>
+              </button>
             </td>
           </ng-container>
 
@@ -547,7 +545,6 @@ export class ProductsComponent implements OnInit {
   ];
   
   dataSource: any[] = [];
-  materials: any[] = [];
   dashboardStats = {
     requiredReplenished: 0,
     sufficientlyStocked: 0,
@@ -568,34 +565,48 @@ export class ProductsComponent implements OnInit {
       next: (products) => {
         this.dataSource = products.map((product: any, index: number) => ({
           sNo: index + 1,
-          materialName: product.materialName || product.Product,
-          materialCode: product.materialCode || product.hsnCode,
-          materialCategory: product.materialCategory || product.ProductCategory,
-          description: product.description || product.productDescription,
-          quantity: product.quantity || product.currentQuantity,
-          unitOfMeasurement: product.unitOfMeasurement || product.uom,
-          locationId: product.locationId || product.binLocation,
-          dateAdded: new Date(product.dateAdded).toLocaleDateString(),
-          id: product.id,
-          thresholdQuantity: product.thresholdQuantity,
-          stockLevelAlert: product.stockLevelAlert
+          materialName: product.Product,
+          materialCode: product.hsnCode,
+          materialCategory: product.ProductCategory,
+          description: product.productDescription,
+          quantity: product.currentQuantity,
+          unitOfMeasurement: product.uom,
+          locationId: product.binLocation,
+          dateAdded: new Date().toLocaleDateString(), // You can adjust this as needed
+          id: index // Use index as ID for local storage
         }));
-
-        this.materials = this.dataSource;
-
-        console.log('Products loaded from localStorage:', this.dataSource);
         this.updateDashboardStats();
       },
       error: (error) => {
         console.error('Error loading products:', error);
-        this.showNotification('Error loading products', 'error');
+        alert('Error loading products: ' + error); // Notify user
       }
     });
   }
 
+  addProduct(product: any) {
+    this.productService.addProduct(product).subscribe(() => {
+      this.loadProducts(); // Reload products after adding
+    });
+  }
+
+  editProduct(index: number) {
+    const productToEdit = this.dataSource[index];
+    this.router.navigate(['/add-product', { product: JSON.stringify(productToEdit) }]);
+  }
+
+  deleteProduct(index: number) {
+    const productId = this.dataSource[index].id; // Assuming each product has an 'id'
+    if (confirm(`Are you sure you want to delete this product?`)) {
+      this.productService.deleteProduct(productId).subscribe(() => {
+        this.loadProducts(); // Reload products after deletion
+      });
+    }
+  }
+
+
   updateDashboardStats() {
     const products = this.dataSource;
-    
     this.dashboardStats = {
       requiredReplenished: products.filter(p => p.quantity < (p.thresholdQuantity || 0)).length,
       sufficientlyStocked: products.filter(p => p.quantity >= (p.thresholdQuantity || 0)).length,
@@ -603,84 +614,32 @@ export class ProductsComponent implements OnInit {
     };
   }
 
-  navigateToCreate() {
-    console.log('Navigating to create product');
-    this.router.navigate(['/add-product']);
-  }
-
   onEdit(row: any) {
-    console.log('Editing row:', row);
-    this.router.navigate(['/edit-product', row.id]);
+    this.router.navigate(['/edit-product', row.id]); // Navigate to edit route with product ID
   }
 
-  deleteRow(index: number, row: any) {
-    if (confirm(`Are you sure you want to delete ${row.materialName}?`))  {
-      // First, remove from local array
-      this.dataSource = this.dataSource.filter((_, idx) => idx !== index);
-      
-      // Update serial numbers
-      this.dataSource = this.dataSource.map((item, idx) => ({
-        ...item,
-        sNo: idx + 1
-      }));
-
-      // Update localStorage
-      const products = JSON.parse(localStorage.getItem('products') || '[]');
-      const updatedProducts = products.filter((product: any) => product.id !== row.id);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
-
-      // Update materials array
-      this.materials = this.dataSource;
-
-      // Update dashboard stats
-      this.updateDashboardStats();
-
-      // Show success message
-      this.showNotification('Product deleted successfully', 'success');
-
-      // Refresh the table data
-      this.loadProducts();
+  deleteRow(index: number, item: any) {
+    if (confirm(`Are you sure you want to delete ${item.materialName}?`)) {
+      this.productService.deleteProduct(item.id).subscribe({
+        next: () => {
+          // Remove the item from dataSource
+          this.dataSource.splice(index, 1); // Remove the item at the specified index
+          this.updateDashboardStats();
+          this.showNotification('Product deleted successfully', 'success');
+        },
+        error: (err) => {
+          console.error('Error deleting product:', err);
+          this.showNotification('Error deleting product: ' + err.message, 'error');
+        }
+      });
     }
   }
 
-  onDelete() {
-    const selectedItems = this.dataSource.filter(item => item.selected);
-    
-    if (selectedItems.length === 0) {
-      alert('Please select an item to delete');
-      return;
-    }
-
-    if (confirm('Are you sure you want to delete the selected item(s)?')) {
-      // Remove selected items from dataSource
-      this.dataSource = this.dataSource.filter(item => !item.selected);
-      
-      // Update serial numbers
-      this.dataSource = this.dataSource.map((item, index) => ({
-        ...item,
-        sNo: index + 1
-      }));
-
-      // Show success message
-      alert('Selected items deleted successfully');
-      
-      // Update dashboard stats
-      this.updateDashboardStats();
-    }
-  }
-
-  selectRow(row: any) {
-    // Clear previous selections
-    this.dataSource.forEach(item => item.selected = false);
-    // Select the clicked row
-    row.selected = true;
+  navigateToCreate() {
+    this.router.navigate(['/add-product']); // Navigate to the add product form
   }
 
   private showNotification(message: string, type: 'success' | 'error') {
-    if (type === 'success') {
-      alert(message);
-    } else {
-      alert('Error: ' + message);
-    }
+    alert(message); // Simple alert for demonstration; replace with your notification logic
   }
 }
