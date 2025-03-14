@@ -2,15 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { MatSnackBar, MatSnackBarConfig, MatSnackBarHorizontalPosition, MatSnackBarModule, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ProductsService } from '../../services/product.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
+import { ActivatedRoute } from '@angular/router';
 
 interface SubProduct {
   id: number;
@@ -34,60 +35,58 @@ interface SubProduct {
     MatTableModule
   ],
   template: `
-    <!-- Main Add Product Container -->
-    <div class="main-container">
-      <div class="header-container">
-        <h2 class="form-title" style="color: blue; margin-top: 0px;">{{ isEditMode ? 'Edit Product' : 'Add Product' }}</h2>
-        <button class="back-button" (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
-          Back
-        </button>
-      </div>
+    <div class="edit-product-container">
+      <h2 class="form-title" style="color: blue; margin-top: 0px;">Add Product</h2>
       
       <form #productForm="ngForm" (ngSubmit)="onSubmit(productForm)">
-        <!-- Product 1 Container Box -->
-        <div class="product-container">
-          <div class="product-header">
+        <!-- Add Product Container -->
+        <div class="add-product-wrapper">
+          <div class="product-form-container">
             <h2 class="form-title" style="color: black; margin-top: 0px;">Product 1</h2>
-          </div>
-
-          <!-- Product Details Container -->
-          <div class="product-details-container">
+            
             <div class="form-grid">
               <!-- Row 1 -->
               <div class="form-group">
                 <label>HSN Code</label>
-                <input type="text" [(ngModel)]="product.hsnCode" name="hsnCode" required>
+                <select [(ngModel)]="product.hsnCode" name="hsnCode">
+                  <option value="">Select HSN Code</option>
+                  <option value="code1">Code 1</option>
+                  <option value="code2">Code 2</option>
+                </select>
               </div>
 
               <div class="form-group">
                 <label> Master Product</label>
                 <input type="text" [(ngModel)]="product.Product" name="masterProduct" 
-                       placeholder="Product Name" class="gray-bg" required>
+                       placeholder="Product Name" class="gray-bg">
               </div>
 
               <div class="form-group">
                 <label>ProductCategory</label>
                 <input type="text" [(ngModel)]="product.ProductCategory" name="ProductCategory" 
-                       placeholder="ProductCategory" class="gray-bg" required>
+                       placeholder="ProductCategory" class="gray-bg">
               </div>
 
               <div class="form-group">
                 <label>UOM</label>
-                <input type="text" [(ngModel)]="product.uom" name="uom" required>
+                <select [(ngModel)]="product.uom" name="uom">
+                  <option value="">Select UOM</option>
+                  <option value="kg">Kilogram</option>
+                  <option value="unit">Unit</option>
+                </select>
               </div>
 
               <div class="form-group">
                 <label>Bin Location</label>
                 <input type="text" [(ngModel)]="product.binLocation" name="binLocation" 
-                       placeholder="Bin Location" required>
+                       placeholder="Bin Location">
               </div>
 
               <!-- Row 2 -->
               <div class="form-group">
                 <label>Unit Price</label>
                 <input type="number" [(ngModel)]="product.unitPrice" name="unitPrice" 
-                       placeholder="Enter Unit Price" (input)="calculateValues()" required>
+                       placeholder="Enter Unit Price" (input)="calculateValues()">
               </div>
 
               <div class="form-group">
@@ -320,48 +319,25 @@ interface SubProduct {
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Form Actions moved below sub-products -->
-        <div class="form-actions">
-          <button type="button" (click)="onReset()" class="reset-button">
-            Reset Data
-          </button>
-          <button 
-            type="submit" 
-            [disabled]="!canSubmit()"
-            class="submit-button">
-            {{ isEditMode ? 'Update Product' : 'Add Product' }}
-          </button>
-        </div>
+          <!-- Form Actions moved below sub-products -->
+          <div class="form-actions">
+            <button type="button" (click)="onReset()" class="reset-button">
+              Reset Data
+            </button>
+            <button 
+              type="submit" 
+              [disabled]="!canSubmit()"
+              class="submit-button">
+              Save
+            </button>
+          </div>
+        </div><!-- End Add Product Container -->
       </form>
     </div>
   `,
   styles: [`
-    .main-container {
-      background-color: #ffffff;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 20px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .product-container {
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 6px;
-      padding: 20px;
-      margin: 15px 0;
-    }
-
-    .product-header {
-      border-bottom: 2px solid #e2e8f0;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-    }
-
-    .product-form-container {
+    .add-product-container {
       padding: 1rem;
       max-width: 1200px;
       margin: 0 auto;
@@ -374,11 +350,9 @@ interface SubProduct {
       text-align: left;
     }
 
-    /* Product Details Container Styles */
-    .product-details-container {
+    /* Add Product Wrapper Styles */
+    .add-product-wrapper {
       border: 1px solid #e2e8f0;
-      border-radius: 0.5rem;
-      padding: 1.5rem;
       margin-bottom: 1.5rem;
       background-color: #f9fafb;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -764,90 +738,10 @@ interface SubProduct {
     .span-2 {
       grid-column: span 2;
     }
-
-    /* Add these new styles */
-    .header-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .back-button {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 8px 16px;
-      background-color: rgb(38, 48, 184);
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      color: white;
-      transition: background-color 0.3s;
-    }
-
-    .back-button:hover {
-      background-color: rgb(31, 39, 145);
-      color: white;
-    }
-
-    /* Custom Notification Styles */
-    ::ng-deep .custom-notification {
-      margin-top: 100px !important;
-      min-width: 400px !important;
-    }
-
-    ::ng-deep .success-notification {
-      background-color: white !important;
-      color: black !important;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    ::ng-deep .success-notification .mat-mdc-snack-bar-label {
-      display: flex !important;
-      align-items: center !important;
-      gap: 8px !important;
-      font-size: 16px !important;
-    }
-
-    ::ng-deep .success-notification .mat-mdc-snack-bar-label::before {
-      content: '' !important;
-      display: inline-block !important;
-      width: 24px !important;
-      height: 24px !important;
-      background-color: #1976d2 !important;
-      border-radius: 50% !important;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>') !important;
-      background-size: 16px !important;
-      background-position: center !important;
-      background-repeat: no-repeat !important;
-    }
-
-    ::ng-deep .success-notification .mdc-snackbar__surface {
-      background-color: white !important;
-      color: black !important;
-      padding: 14px 20px !important;
-      border-radius: 4px !important;
-    }
-
-    ::ng-deep .success-notification .mat-mdc-snack-bar-actions {
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-
-    ::ng-deep .success-notification .mdc-button {
-      color: #1976d2 !important;
-    }
-
-    ::ng-deep .error-notification {
-      background-color: #f44336 !important;
-      color: white !important;
-    }
   `]
 })
 export class AddProductComponent implements OnInit {
-  product: any = {
-    id: null,
+  product = {
     hsnCode: '',
     Product: '',
     ProductCategory: '',
@@ -872,7 +766,8 @@ export class AddProductComponent implements OnInit {
     thresholdQuantity: '',
     stockLevelAlert: '',
     productDescription: '',
-    productImage: null
+    productImage: null as File | null,
+    id: null
   };
 
   subProducts: SubProduct[] = [];
@@ -884,8 +779,6 @@ export class AddProductComponent implements OnInit {
   isLoading = false;
   showNewInput: boolean = false;
   newItemName: string = '';
-  isEditMode: boolean = false;
-  productId: number | null = null;
 
   constructor(
     private http: HttpClient,
@@ -896,21 +789,62 @@ export class AddProductComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
-      if (params['product']) {
-        this.product = JSON.parse(params['product']);
-        this.productId = this.product.id;
-        this.isEditMode = true;
+    this.route.queryParams.subscribe(params => {
+      const productId = params['id'];
+      if (productId) {
+        this.loadProductData(productId);
       }
     });
+  }
+
+  loadProductData(productId: number) {
+    const products = JSON.parse(localStorage.getItem('products') || '[]');
+    const product = products.find((p: any) => p.id == productId);
+    
+    if (product) {
+      this.product = {
+        hsnCode: product.materialCode || product.hsnCode || '',
+        Product: product.materialName || product.Product || '',
+        ProductCategory: product.materialCategory || product.ProductCategory || '',
+        uom: product.unitOfMeasurement || product.uom || '',
+        binLocation: product.locationId || product.binLocation || '',
+        unitPrice: product.unitPrice || '',
+        landingChargesPercent: product.landingChargesPercent || '',
+        landingCharges: product.landingCharges || '',
+        costOfProduct: product.costOfProduct || '',
+        profitPercent: product.profitPercent || '',
+        targetedSellingPrice: product.targetedSellingPrice || '',
+        gstApplicable: product.gstApplicable || '',
+        igstPercent: product.igstPercent || '',
+        cgstPercent: product.cgstPercent || '',
+        sgstPercent: product.sgstPercent || '',
+        stockKeepingUnit: product.stockKeepingUnit || '',
+        latestUnitPrice: product.latestUnitPrice || '',
+        latestPODate: product.latestPODate || '',
+        latestPONumber: product.latestPONumber || '',
+        openingStock: product.openingStock || '',
+        currentQuantity: product.quantity || product.currentQuantity || '',
+        thresholdQuantity: product.thresholdQuantity || '',
+        stockLevelAlert: product.stockLevelAlert || '',
+        productDescription: product.description || product.productDescription || '',
+        productImage: null,
+        id: product.id
+      };
+      this.imagePreviewUrl = product.imageUrl || null;
+    } else {
+      this.showNotification('Product not found', 'error');
+      this.router.navigate(['/products']);
+    }
   }
 
   onFileSelected(event: Event) {
     const element = event.target as HTMLInputElement;
     const file = element.files?.[0];
     if (file) {
+      // Save the file
       this.product.productImage = file;
       
+      // Create preview URL
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagePreviewUrl = e.target.result;
@@ -924,27 +858,40 @@ export class AddProductComponent implements OnInit {
     this.imagePreviewUrl = null;
   }
 
+  /**
+   * Calculates landing charges based on unit price and landing charges percentage
+   * Also calculates the cost of product (unit price + landing charges)
+   */
   calculateValues() {
     if (this.product.unitPrice && this.product.landingChargesPercent) {
       const unitPrice = parseFloat(this.product.unitPrice);
       const landingChargesPercent = parseFloat(this.product.landingChargesPercent);
       
       if (!isNaN(unitPrice) && !isNaN(landingChargesPercent)) {
+        // Calculate landing charges
         const landingCharges = (unitPrice * landingChargesPercent) / 100;
         this.product.landingCharges = landingCharges.toFixed(2);
         
+        // Calculate cost of product
         const costOfProduct = unitPrice + landingCharges;
         this.product.costOfProduct = costOfProduct.toFixed(2);
+        
+        // Calculate targeted selling price if profit percentage is set
+        this.calculateTargetedSellingPrice();
       }
     }
   }
 
+  /**
+   * Calculates targeted selling price based on cost of product and profit percentage
+   */
   calculateTargetedSellingPrice() {
     if (this.product.costOfProduct && this.product.profitPercent) {
       const costOfProduct = parseFloat(this.product.costOfProduct);
       const profitPercent = parseFloat(this.product.profitPercent);
       
       if (!isNaN(costOfProduct) && !isNaN(profitPercent)) {
+        // Calculate targeted selling price
         const profitAmount = (costOfProduct * profitPercent) / 100;
         const targetedSellingPrice = costOfProduct + profitAmount;
         this.product.targetedSellingPrice = targetedSellingPrice.toFixed(2);
@@ -953,41 +900,87 @@ export class AddProductComponent implements OnInit {
   }
 
   onSubmit(form: any) {
-    if (this.isEditMode) {
-      this.productService.updateProduct(this.productId!, this.product).subscribe({
-        next: () => {
-          this.showNotification('Product updated successfully', 'success');
-          this.router.navigate(['/products']);
-        },
-        error: (err) => {
-          console.error('Error updating product:', err);
-          this.showNotification('Error updating product: ' + (err.error?.message || 'Unknown error'), 'error');
-        }
-      });
-    } else {
-      this.productService.addProduct(this.product).subscribe({
-        next: () => {
-          this.showNotification('Product added successfully', 'success');
-          this.router.navigate(['/products']);
-        },
-        error: (err) => {
-          console.error('Error adding product:', err);
-          this.showNotification('Error adding product: ' + (err.error?.message || 'Unknown error'), 'error');
-        }
-      });
+    // Check if required fields are filled
+    if (!this.validateForm()) {
+      this.showNotification('Please fill all required fields', 'error');
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    // Create product data object
+    const productData = {
+      id: this.product.id || Date.now(),
+      sNo: this.getNextSerialNumber(),
+      materialName: this.product.Product,
+      materialCode: this.product.hsnCode,
+      materialCategory: this.product.ProductCategory,
+      description: this.product.productDescription,
+      quantity: this.product.currentQuantity,
+      unitOfMeasurement: this.product.uom,
+      locationId: this.product.binLocation,
+      dateAdded: new Date().toISOString(),
+      imageUrl: this.imagePreviewUrl,
+      unitPrice: this.product.unitPrice,
+      landingChargesPercent: this.product.landingChargesPercent,
+      landingCharges: this.product.landingCharges,
+      costOfProduct: this.product.costOfProduct,
+      profitPercent: this.product.profitPercent,
+      targetedSellingPrice: this.product.targetedSellingPrice,
+      gstApplicable: this.product.gstApplicable,
+      igstPercent: this.product.igstPercent,
+      cgstPercent: this.product.cgstPercent,
+      sgstPercent: this.product.sgstPercent,
+      stockKeepingUnit: this.product.stockKeepingUnit,
+      latestUnitPrice: this.product.latestUnitPrice,
+      latestPODate: this.product.latestPODate,
+      latestPONumber: this.product.latestPONumber,
+      openingStock: this.product.openingStock,
+      thresholdQuantity: this.product.thresholdQuantity,
+      stockLevelAlert: this.product.stockLevelAlert
+    };
+
+    // Only proceed if validation passes
+    if (this.validateForm()) {
+      const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+      
+      // Find the index of the product to update
+      const productIndex = existingProducts.findIndex((p: any) => p.id === productData.id);
+
+      if (productIndex !== -1) {
+        // Update existing product
+        existingProducts[productIndex] = productData;
+      } else {
+        // Add new product
+        existingProducts.push(productData);
+      }
+
+      localStorage.setItem('products', JSON.stringify(existingProducts));
+
+      setTimeout(() => {
+        this.showNotification('Product saved successfully!', 'success');
+        this.isSubmitting = false;
+        this.router.navigate(['/products']);
+      }, 1000);
     }
   }
 
+  private getNextSerialNumber(): number {
+    const products = JSON.parse(localStorage.getItem('products') || '[]');
+    return products.length + 1;
+  }
+
   private showNotification(message: string, type: 'success' | 'error') {
-    this.snackBar.open(message, 'OK', {
+    this.snackBar.open(message, 'Close', {
       duration: 3000,
-      panelClass: type === 'success' ? 'success-notification' : 'error-notification'
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+      panelClass: type === 'success' ? ['success-notification'] : ['error-notification']
     });
   }
 
   onReset() {
     this.product = {
-      id: null,
       hsnCode:'',
       Product: '',
       ProductCategory: '',
@@ -1012,10 +1005,11 @@ export class AddProductComponent implements OnInit {
       thresholdQuantity: '',
       stockLevelAlert: '',
       productDescription: '',
-      productImage: null
+      productImage: null,
+      id: null
     };
     this.imagePreviewUrl = null;
-    this.subProducts = [];
+    this.subProducts = []; // Clear all temporary data
     this.showSubProducts = false;
   }
 
@@ -1062,7 +1056,9 @@ export class AddProductComponent implements OnInit {
     this.showSubProducts = true;
   }
 
+  // Add validation method
   private validateForm(): boolean {
+    // Check required fields
     if (!this.product.Product || 
         !this.product.hsnCode || 
         !this.product.ProductCategory || 
@@ -1074,12 +1070,14 @@ export class AddProductComponent implements OnInit {
       return false;
     }
 
+    // Validate numeric fields
     if (isNaN(Number(this.product.unitPrice)) || 
         isNaN(Number(this.product.currentQuantity)) || 
         isNaN(Number(this.product.thresholdQuantity))) {
       return false;
     }
 
+    // Validate numeric values are positive
     if (Number(this.product.unitPrice) <= 0 || 
         Number(this.product.currentQuantity) < 0 || 
         Number(this.product.thresholdQuantity) < 0) {
@@ -1089,15 +1087,13 @@ export class AddProductComponent implements OnInit {
     return true;
   }
 
+  // Add method to check if form can be submitted
   canSubmit(): boolean {
     return this.validateForm() && !this.isSubmitting;
   }
 
   removeItem(index: number) {
-    this.subProducts.splice(index, 1);
-  }
+    this.subProducts.splice(index, 1);
+}
 
-  goBack() {
-    this.router.navigate(['/products']);
-  }
 }

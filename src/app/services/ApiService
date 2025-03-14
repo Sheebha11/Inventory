@@ -1,0 +1,40 @@
+import { Component, OnInit } from '@angular/core';
+import { ApiService } from '../api.service';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent implements OnInit {
+  users: any[] = [];
+  products: any[] = [];
+
+  constructor(private apiService: ApiService) {}
+
+  ngOnInit() {
+    this.apiService.getUsers().subscribe((data) => {
+      this.users = data;
+    });
+
+    this.apiService.getProducts().subscribe((data) => {
+      this.products = data;
+    });
+  }
+
+  // Add user example
+  addUser() {
+    const newUser = { firstName: 'Alice', lastName: 'Johnson', email: 'alice.johnson@example.com' };
+    this.apiService.addUser(newUser).subscribe((data) => {
+      this.users.push(data);
+    });
+  }
+
+  // Add product example
+  addProduct() {
+    const newProduct = { name: 'Tablet', price: 400 };
+    this.apiService.addProduct(newProduct).subscribe((data) => {
+      this.products.push(data);
+    });
+  }
+}

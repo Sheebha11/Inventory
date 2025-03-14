@@ -72,68 +72,46 @@
 
   <!-- Material List Table -->
   <div class="table-container">
-    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
-      <ng-container matColumnDef="sNo">
-        <th mat-header-cell *matHeaderCellDef> S.No </th>
-        <td mat-cell *matCellDef="let element"> {{element.sNo}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="materialName">
-        <th mat-header-cell *matHeaderCellDef> Material Name </th>
-        <td mat-cell *matCellDef="let element"> {{element.materialName}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="materialCode">
-        <th mat-header-cell *matHeaderCellDef> Material Code </th>
-        <td mat-cell *matCellDef="let element"> {{element.materialCode}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="materialCategory">
-        <th mat-header-cell *matHeaderCellDef> Material Category </th>
-        <td mat-cell *matCellDef="let element"> {{element.materialCategory}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="description">
-        <th mat-header-cell *matHeaderCellDef> Description </th>
-        <td mat-cell *matCellDef="let element"> {{element.description}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="quantity">
-        <th mat-header-cell *matHeaderCellDef> Quantity </th>
-        <td mat-cell *matCellDef="let element"> {{element.quantity}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="unitOfMeasurement">
-        <th mat-header-cell *matHeaderCellDef> Unit of Measurement </th>
-        <td mat-cell *matCellDef="let element"> {{element.unitOfMeasurement}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="locationId">
-        <th mat-header-cell *matHeaderCellDef> Location ID </th>
-        <td mat-cell *matCellDef="let element"> {{element.locationId}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="dateAdded">
-        <th mat-header-cell *matHeaderCellDef> Date Added </th>
-        <td mat-cell *matCellDef="let element"> {{element.dateAdded}} </td>
-      </ng-container>
-
-      <ng-container matColumnDef="action">
-        <th mat-header-cell *matHeaderCellDef> Actions </th>
-        <td mat-cell *matCellDef="let element; let i = index">
-          <div class="action-buttons">
-            <button mat-icon-button (click)="editProduct(i)">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="deleteProduct(i)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    <table class="material-table">
+      <thead>
+        <tr>
+          <th>S No</th>
+          <th>Material Name</th>
+          <th>HSN Code</th>
+          <th>Material Category</th>
+          <th>Description</th>
+          <th>Quantity</th>
+          <th>Unit of Measurement</th>
+          <th>Location ID</th>
+          <th>Date Added</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of dataSource; let i = index">
+          <td>{{item.sNo}}</td>
+          <td>
+            <a href="#" class="material-link">{{item.materialName}}</a>
+          </td>
+          <td>{{item.materialCode}}</td>
+          <td>{{item.materialCategory}}</td>
+          <td>{{item.description}}</td>
+          <td>{{item.quantity}}</td>
+          <td>{{item.unitOfMeasurement}}</td>
+          <td>{{item.locationId}}</td>
+          <td>{{item.dateAdded}}</td>
+          <td class="action-column">
+            <div class="action-buttons">
+              <button mat-icon-button color="primary" (click)="onEdit(item)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteRow(i, item)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </div>
 </div>
