@@ -20,6 +20,23 @@ interface SubProduct {
   description: string;
 }
 
+interface MasterSection {
+  id: number;
+  masterName: string;
+  materials: Array<{
+    id: number;
+    name: string;
+    description: string;
+  }>;
+}
+
+interface SubProductRow {
+  id: number;
+  masterName: string;
+  subMaterialName: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-add-product',
   standalone: true,
@@ -297,6 +314,7 @@ interface SubProduct {
 
               <!-- Input box that appears when Add New is clicked -->
               <div *ngIf="showNewInput" class="new-item-input-container">
+              
                 <input 
                   type="text" 
                   [(ngModel)]="newItemName"
@@ -356,22 +374,56 @@ interface SubProduct {
       margin-bottom: 1.5rem;
       background-color: #f9fafb;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem;
+      background-color: #f9fafb;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 1rem;
+      grid-template-columns: repeat(5, 1fr); // Show 5 items per row
+      gap: 1rem; // Increased from 0.5rem
+      padding: 0.75rem; // Increased from 0.375rem
+      margin: 0 auto;
+      max-width: 100%;
     }
 
     .form-group {
-      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1rem; // Increased from 0.5rem
+      min-width: 0;
+    }
+
+    .form-group label {
+      font-size: 0.875rem; // Increased from 0.75rem
+      font-weight: 500;
+      color: #4b5563;
+      margin-bottom: 0.375rem; // Increased from 0.25rem
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.5rem; // Increased from 0.25rem
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem; // Slightly larger radius
+      font-size: 0.875rem; // Increased from 0.75rem
+      background-color: white;
+      transition: border-color 0.2s;
+      height: 36px; // Increased from 28px
     }
 
     .images-subproduct-container {
       display: flex;
       flex-direction: column;
       margin-top: 1rem;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-top: 1px solid #e2e8f0;
     }
 
     .image-section {
@@ -394,12 +446,16 @@ interface SubProduct {
 
     .gray-bg {
       background-color: #f3f4f6;
+      background-color: #f3f4f6 !important;
     }
 
     /* Style for calculated fields */
     .calculated-field {
       background-color: #f3f4f6;
       color: #4B5563;
+      cursor: not-allowed;
+      background-color: #f3f4f6 !important;
+      color: #4b5563;
       cursor: not-allowed;
     }
 
@@ -408,6 +464,10 @@ interface SubProduct {
       align-items: flex-start;
       gap: 0.25rem;
       width: 100%;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .image-upload-container {
@@ -738,6 +798,83 @@ interface SubProduct {
     .span-2 {
       grid-column: span 2;
     }
+
+    .product-form-container {
+      background-color: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 1.25rem; // Increased from 0.75rem
+      margin-bottom: 1.5rem; // Increased from 1rem
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // Slightly stronger shadow
+      overflow: hidden;
+      max-width: 1300px; // Increased from 1200px
+      margin: 0 auto;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+      .form-grid {
+        grid-template-columns: repeat(4, 1fr); // Show 4 items per row
+      }
+    }
+
+    @media (max-width: 900px) {
+      .form-grid {
+        grid-template-columns: repeat(3, 1fr); // Show 3 items per row
+      }
+    }
+
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: repeat(2, 1fr); // Show 2 items per row
+      }
+      
+      .image-upload-row {
+        flex-direction: column;
+      }
+      
+      .image-upload-container {
+        width: 100%;
+      }
+    }
+
+    /* Form title styles */
+    .form-title {
+      font-size: 1.25rem;
+      color: #1f2937;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    ::ng-deep .center-notification-success {
+      background-color: #4CAF50 !important;
+      color: white !important;
+      min-width: 300px !important;
+      margin-top: 20vh !important;
+      text-align: center !important;
+      border-radius: 8px !important;
+    }
+
+    ::ng-deep .center-notification-error {
+      background-color: #f44336 !important;
+      color: white !important;
+      min-width: 300px !important;
+      margin-top: 20vh !important;
+      text-align: center !important;
+      border-radius: 8px !important;
+    }
+
+    ::ng-deep .mat-snack-bar-container {
+      margin: 0 auto !important;
+      position: fixed !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
+
+    ::ng-deep .mat-snack-bar-container .mat-button {
+      color: white !important;
+    }
   `]
 })
 export class AddProductComponent implements OnInit {
@@ -779,6 +916,10 @@ export class AddProductComponent implements OnInit {
   isLoading = false;
   showNewInput: boolean = false;
   newItemName: string = '';
+  masterSections: MasterSection[] = [];
+  showMasterTable: boolean = false;
+  subProductRows: SubProductRow[] = [];
+  showSubProductTable = false;
 
   constructor(
     private http: HttpClient,
@@ -958,7 +1099,7 @@ export class AddProductComponent implements OnInit {
       localStorage.setItem('products', JSON.stringify(existingProducts));
 
       setTimeout(() => {
-        this.showNotification('Product saved successfully!', 'success');
+        this.showNotification('Material  list Added Sucessfully!', 'success');
         this.isSubmitting = false;
         this.router.navigate(['/products']);
       }, 1000);
@@ -973,9 +1114,9 @@ export class AddProductComponent implements OnInit {
   private showNotification(message: string, type: 'success' | 'error') {
     this.snackBar.open(message, 'Close', {
       duration: 3000,
-      horizontalPosition: 'right',
+      horizontalPosition: 'center', // Changed from 'right' to 'center'
       verticalPosition: 'top',
-      panelClass: type === 'success' ? ['success-notification'] : ['error-notification']
+      panelClass: [type === 'success' ? 'center-notification-success' : 'center-notification-error']
     });
   }
 
@@ -1096,4 +1237,28 @@ export class AddProductComponent implements OnInit {
     this.subProducts.splice(index, 1);
 }
 
+  addNewRow() {
+    if (!this.showMasterTable) {
+      this.showMasterTable = true;
+    }
+    
+    const newSection = {
+      id: this.masterSections.length + 1,
+      masterName: '',
+      materials: [{
+        id: 1,
+        name: '',
+        description: ''
+      }]
+    };
+    
+    this.masterSections.push(newSection);
+  }
+
+  deleteMasterRow(sectionIndex: number) {
+    this.masterSections.splice(sectionIndex, 1);
+    if (this.masterSections.length === 0) {
+      this.showMasterTable = false;
+    }
+  }
 }

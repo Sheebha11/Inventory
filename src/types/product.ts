@@ -1,28 +1,31 @@
 export default interface Product{
-    hsnCode:'',
-    Product: '',
-    ProductCategory: '',
-    uom: '',
-    binLocation: '',
-    unitPrice: '',
-    landingChargesPercent: '',
-    landingCharges: '',
-    costOfProduct: '',
-    profitPercent: '',
-    targetedSellingPrice: '',
-    gstApplicable: '',
-    igstPercent: '',
-    cgstPercent: '',
-    sgstPercent: '',
-    stockKeepingUnit: '',
-    latestUnitPrice: '',
-    latestPODate: '',
-    latestPONumber: '',
-    openingStock: '',
-    currentQuantity: '',
-    thresholdQuantity: '',
-    stockLevelAlert: '',
-    productDescription: '',
-    productImage: null
+    masterProduct: string;
+  id: number;
+  hsnCode: string;
+  uom: string;
+  category: string;
+  sku: string;
+  unitPrice: number;
+  landingChargesPercentage: number;
+  landingCharges: number;
+  costOfProduct: number;
+  profitPercentage: number;
+  targetedSellingPrice: number;
+  gstApplicable: boolean;
+  igstPercentage: number;
+  cgstPercentage: number;
+  sgstPercentage: number;
+  latestUnitPrice: number;
+  productDescription: string;
+  productImage: string;
+  latestPODate: Date;
+  latestPONumber: string;
+  openingStock: number;
+  currentQty: number;
+  thresholdQuantity: number;
+  stockLevel: number;
+  
+} 
 
-}
+    
+
