@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
-import { FormsModule } from '@angular/forms';
+import { Form, FormGroup, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProductsService } from '../../services/product.service';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -177,6 +177,10 @@ interface DashboardStats {
                 </button>
                 <button mat-icon-button color="warn" (click)="deleteRow(i, row)">
                   <mat-icon>delete</mat-icon>
+                </button>
+                <button (click)="editProduct(row.id)" class="edit-button">
+                  <mat-icon>edit</mat-icon>
+                  Edit
                 </button>
               </div>
             </td>
@@ -608,25 +612,76 @@ export class ProductsComponent implements OnInit {
     this.router.navigate(['/add-product']);
   }
 
+  // Update the onEdit method
   onEdit(row: any) {
-    console.log('Editing row:', row);
+    console.log('Editing product:', row);
     
-    // Convert the row data to match your form control structure
-    const formData = {
-      sNo: row.sNo || null,
-      roleName: row.roleName || null,
-      roleId: row.roleId || null,
-      roleDescription: row.roleDescription || null,
-      screenNames: row.screenNames || []
+    // Create a complete product object with all necessary fields
+    const productToEdit = {
+      id: row.id,
+      materialName: row.materialName,
+      materialCode: row.materialCode,
+      materialCategory: row.materialCategory,
+      description: row.description,
+      quantity: row.quantity,
+      unitOfMeasurement: row.unitOfMeasurement,
+      locationId: row.locationId,
+      dateAdded: row.dateAdded,
+      
+      // Pricing details
+      unitPrice: row.unitPrice || 0,
+      landingChargesPercent: row.landingChargesPercent || 0,
+      landingCharges: row.landingCharges || 0,
+      costOfProduct: row.costOfProduct || 0,
+      profitPercent: row.profitPercent || 0,
+      targetedSellingPrice: row.targetedSellingPrice || 0,
+      
+      // Stock management
+      currentQuantity: row.quantity,
+      thresholdQuantity: row.thresholdQuantity || 0,
+      reorderQuantity: row.reorderQuantity || 0,
+      maximumQuantity: row.maximumQuantity || 0,
+      openingStock: row.openingStock || 0,
+      
+      // GST details
+      gstApplicable: row.gstApplicable || 'no',
+      gstRate: row.gstRate || 0,
+      gstAmount: row.gstAmount || 0,
+      
+      // Location and identification
+      binLocation: row.locationId,
+      stockKeepingUnit: row.stockKeepingUnit || '',
+      
+      // Purchase history
+      latestUnitPrice: row.latestUnitPrice || 0,
+      latestPODate: row.latestPODate || '',
+      latestPONumber: row.latestPONumber || '',
+      
+      // Image
+      imageUrl: row.imageUrl || '',
+      
+      // Status
+      status: row.status || 'Active',
+      stockLevelAlert: row.stockLevelAlert || 'Normal'
     };
-    
-    // Navigate to add-product route with the row id and form data
-    this.router.navigate(['/add-product'], { 
-      queryParams: { 
-        id: row.id,
-        formData: JSON.stringify(formData)
-      } 
-    });
+
+    try {
+      // Store the product data in localStorage
+      localStorage.setItem('editProduct', JSON.stringify(productToEdit));
+      
+      // Navigate to edit form
+      this.router.navigate(['/add-product'], { 
+        queryParams: { 
+          mode: 'edit',
+          id: row.id 
+        }
+      });
+      
+      console.log('Successfully stored edit data:', productToEdit);
+    } catch (error) {
+      console.error('Error preparing edit data:', error);
+      this.showNotification('Error preparing product data for edit', 'error');
+    }
   }
 
   deleteRow(index: number, row: any) {
@@ -697,6 +752,138 @@ export class ProductsComponent implements OnInit {
       alert(message);
     } else {
       alert('Error: ' + message);
-    }
-  }
+    }
+  }
+
+  // Add this method to the ProductsComponent
+  private calculateProductValues(product: any): void {
+    // Calculate landing charges
+    product.landingCharges = (product.unitPrice * product.landingChargesPercent / 100) || 0;
+    
+    // Calculate cost of product
+    product.costOfProduct = product.unitPrice + product.landingCharges;
+    
+    // Calculate targeted selling price
+    product.targetedSellingPrice = product.costOfProduct + 
+      (product.costOfProduct * product.profitPercent / 100);
+    
+    // Calculate GST if applicable
+    if (product.gstApplicable === 'yes') {
+      product.gstAmount = (product.targetedSellingPrice * product.gstRate / 100) || 0;
+    } else {
+      product.gstAmount = 0;
+    }
+    
+    // Calculate final selling price
+    product.sellingPrice = product.targetedSellingPrice + product.gstAmount;
+  }
+
+  // Update the editProduct method
+  editProduct(id: number) {
+    const productToEdit = this.dataSource.find(product => product.id === id);
+    
+    if (productToEdit) {
+      const editData = {
+        // Basic Details
+        id: productToEdit.id,
+        materialName: productToEdit.materialName || '',
+        materialCode: productToEdit.materialCode || '',
+        materialCategory: productToEdit.materialCategory || '',
+        description: productToEdit.description || '',
+        
+        // Quantity and Measurements
+        quantity: productToEdit.quantity || 0,
+        unitOfMeasurement: productToEdit.unitOfMeasurement || '',
+        openingStock: productToEdit.openingStock || 0,
+        currentQuantity: productToEdit.quantity || 0,
+        
+        // Stock Management
+        thresholdQuantity: productToEdit.thresholdQuantity || 0,
+        reorderQuantity: productToEdit.reorderQuantity || 0,
+        maximumQuantity: productToEdit.maximumQuantity || 0,
+        stockKeepingUnit: productToEdit.stockKeepingUnit || '',
+        
+        // Location Details
+        locationId: productToEdit.locationId || '',
+        binLocation: productToEdit.binLocation || productToEdit.locationId || '',
+        
+        // Pricing Details
+        unitPrice: productToEdit.unitPrice || 0,
+        landingChargesPercent: productToEdit.landingChargesPercent || 0,
+        landingCharges: productToEdit.landingCharges || 0,
+        costOfProduct: productToEdit.costOfProduct || 0,
+        profitPercent: productToEdit.profitPercent || 0,
+        targetedSellingPrice: productToEdit.targetedSellingPrice || 0,
+        
+        // GST Details
+        gstApplicable: productToEdit.gstApplicable || 'no',
+        gstRate: productToEdit.gstRate || 0,
+        gstAmount: productToEdit.gstAmount || 0,
+        
+        // Additional Details
+        dateAdded: productToEdit.dateAdded || new Date().toISOString(),
+        latestUnitPrice: productToEdit.latestUnitPrice || 0,
+        latestPODate: productToEdit.latestPODate || '',
+        latestPONumber: productToEdit.latestPONumber || '',
+        
+        // Image
+        imageUrl: productToEdit.imageUrl || '',
+        
+        // Status and Alerts
+        stockLevelAlert: productToEdit.stockLevelAlert || 'Normal',
+        status: productToEdit.status || 'Active'
+      };
+
+      try {
+        // Store the complete edit data in localStorage
+        localStorage.setItem('editProduct', JSON.stringify(editData));
+        
+        // Navigate to add-product with edit mode
+        this.router.navigate(['/add-product'], {
+          queryParams: {
+            mode: 'edit',
+            id: id
+          }
+        });
+        
+        console.log('Successfully prepared edit data:', editData);
+      } catch (error) {
+        console.error('Error preparing edit data:', error);
+        this.showNotification('Error preparing product data for edit', 'error');
+      }
+    } else {
+      this.showNotification('Product not found', 'error');
+    }
+  }
+
+  // Add this helper method to update form fields with product data
+  private setFormValues(formGroup: FormGroup, productData: any) {
+    Object.keys(productData).forEach(key => {
+      if (formGroup.controls[key]) {
+        formGroup.controls[key].setValue(productData[key]);
+      }
+    });
+  }
+
+  // Add this method to validate the edit data
+  private validateEditData(data: any): boolean {
+    const requiredFields = [
+      'materialName',
+      'materialCode',
+      'materialCategory',
+      'quantity',
+      'unitOfMeasurement'
+    ];
+
+    return requiredFields.every(field => {
+      const value = data[field];
+      return value !== null && value !== undefined && value !== '';
+    });
+  }
+
+  // Add this method to handle edit cancellation
+  cancelEdit() {
+    localStorage.removeItem('editProduct');
+    this.router.navigate(['/products']);
+  }
 }

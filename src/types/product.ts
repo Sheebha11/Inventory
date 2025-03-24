@@ -1,31 +1,12 @@
-export default interface Product{
-    masterProduct: string;
-  id: number;
+export interface Product {
   hsnCode: string;
-  uom: string;
+  masterProduct: string;
   category: string;
-  sku: string;
+  uom: string;
   unitPrice: number;
-  landingChargesPercentage: number;
-  landingCharges: number;
+  landingChargesPercent: number;
   costOfProduct: number;
-  profitPercentage: number;
-  targetedSellingPrice: number;
-  gstApplicable: boolean;
-  igstPercentage: number;
-  cgstPercentage: number;
-  sgstPercentage: number;
-  latestUnitPrice: number;
-  productDescription: string;
-  productImage: string;
-  latestPODate: Date;
-  latestPONumber: string;
-  openingStock: number;
-  currentQty: number;
+  gstApplicable: string;
+  currentQuantity: number;
   thresholdQuantity: number;
-  stockLevel: number;
-  
-} 
-
-    
-
+}

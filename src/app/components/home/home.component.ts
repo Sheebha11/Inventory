@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { BrandService } from '../../services/brand.service';
 import { OrdersService } from '../../services/orders.service';
-import { ProductService } from '../../services/product.service';
+import { ProductsService } from '../../services/product.service';
 
 @Component({
   selector: 'app-home',
@@ -17,7 +17,7 @@ export class HomeComponent {
   totalBrands!: number;
   brandService = inject(BrandService);
   orderService = inject(OrdersService);
-  productService = inject(ProductService);
+  productService = inject(ProductsService);
 
   ngOnInit() {
     this.brandService

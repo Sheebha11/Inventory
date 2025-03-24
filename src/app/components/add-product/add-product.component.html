@@ -1,256 +1,163 @@
 <div class="product-form-container">
-  <h2 class="form-title" style="color: blue; margin-top: 0px;">Add Product</h2>
-  <h2 class="form-title" style="color: black; margin-top: 0px;">Product 1</h2>
+  <header>
+    <h2 class="form-title text-primary mb-0">Add Product</h2>
+    <h3 class="form-subtitle mb-3">Product 1</h3>
+  </header>
   
-  <form #productForm="ngForm" (ngSubmit)="onSubmit()">
+  <form #productForm="ngForm" (ngSubmit)="onSubmit()" novalidate>
     <div class="form-grid">
-      <!-- Row 1 -->
+      <!-- Basic Product Details -->
       <div class="form-group">
-        <label>HSN Code</label>
-        <select [(ngModel)]="product.hsnCode" name="hsnCode">
+        <label for="hsnCode">HSN Code*</label>
+        <select id="hsnCode" [(ngModel)]="product.hsnCode" name="hsnCode" required>
           <option value="">Select HSN Code</option>
           <option value="code1">Code 1</option>
           <option value="code2">Code 2</option>
         </select>
+        <div class="invalid-feedback" *ngIf="productForm.submitted && productForm.form.get('hsnCode')?.errors?.['required']">
+          HSN Code is required
+        </div>
       </div>
 
       <div class="form-group">
-        <label>Master Product</label>
-        <input type="text" [(ngModel)]="product.masterProduct" name="masterProduct" 
-               placeholder="Product Name" class="gray-bg">
+        <label for="masterProduct">Master Product*</label>
+        <input type="text" id="masterProduct" [(ngModel)]="product.masterProduct" 
+               name="masterProduct" placeholder="Enter product name" 
+               class="form-control gray-bg" required>
       </div>
 
+      <!-- Product Classification -->
       <div class="form-group">
-        <label>Category</label>
-        <input type="text" [(ngModel)]="product.category" name="category" 
-               placeholder="Category" class="gray-bg">
+        <label for="category">Category*</label>
+        <input type="text" id="category" [(ngModel)]="product.category" 
+               name="category" placeholder="Enter category" required>
       </div>
-
+      
       <div class="form-group">
-        <label>UOM</label>
-        <select [(ngModel)]="product.uom" name="uom">
+        <label for="uom">Unit of Measurement</label>
+        <select id="uom" [(ngModel)]="product.uom" name="uom" class="form-control">
           <option value="">Select UOM</option>
           <option value="kg">Kilogram</option>
-          <option value="unit">Unit</option>
+          <option value="liter">Liter</option>
+          <option value="piece">Piece</option>
         </select>
       </div>
 
+      <!-- Pricing Details -->
       <div class="form-group">
-        <label>Bin Location</label>
-        <input type="text" [(ngModel)]="product.binLocation" name="binLocation" 
-               placeholder="Bin Location">
-      </div>
-
-      <!-- Row 2 -->
-      <div class="form-group">
-        <label>Unit Price</label>
-        <input type="number" [(ngModel)]="product.unitPrice" name="unitPrice" 
-               placeholder="Enter Unit Price">
+        <label for="unitPrice">Unit Price*</label>
+        <input type="number" id="unitPrice" [(ngModel)]="product.unitPrice" 
+               name="unitPrice" placeholder="0.00" min="0" required>
       </div>
 
       <div class="form-group">
-        <label>Landing Charges %</label>
-        <input type="number" [(ngModel)]="product.landingChargesPercent" name="landingChargesPercent" 
-               placeholder="Enter Percentage Value">
+        <label for="landingChargesPercent">Landing Charges (%)</label>
+        <input type="number" id="landingChargesPercent" 
+               [(ngModel)]="product.landingChargesPercent" 
+               name="landingChargesPercent" placeholder="0.00" min="0">
       </div>
 
+      <!-- Calculated Fields -->
       <div class="form-group">
-        <label>Landing Charges</label>
-        <input type="number" [(ngModel)]="product.landingCharges" name="landingCharges" 
-               placeholder="Enter Charges Value">
+        <label for="costOfProduct">Cost of Product</label>
+        <input type="number" id="costOfProduct" [(ngModel)]="product.costOfProduct" 
+               name="costOfProduct" [readonly]="true" class="form-control-plaintext">
       </div>
 
+      <!-- GST Information -->
       <div class="form-group">
-        <label>Cost Of Product</label>
-        <input type="number" [(ngModel)]="product.costOfProduct" name="costOfProduct" 
-               placeholder="Enter Product Cost">
-      </div>
-
-      <div class="form-group">
-        <label>Profit %</label>
-        <input type="number" [(ngModel)]="product.profitPercent" name="profitPercent" 
-               placeholder="Enter Percentage">
-      </div>
-
-      <!-- Row 3 -->
-      <div class="form-group">
-        <label>Targeted Selling Price</label>
-        <input type="number" [(ngModel)]="product.targetedSellingPrice" name="targetedSellingPrice" 
-               placeholder="Selling Price">
-      </div>
-
-      <div class="form-group">
-        <label>GST Applicable</label>
-        <select [(ngModel)]="product.gstApplicable" name="gstApplicable">
-          <option value="">Select GST Applicable</option>
+        <label for="gstApplicable">GST Applicable</label>
+        <select id="gstApplicable" [(ngModel)]="product.gstApplicable" 
+                name="gstApplicable" class="form-control">
+          <option value="">Select</option>
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
       </div>
 
+      <!-- Stock Management -->
       <div class="form-group">
-        <label>IGST %</label>
-        <input type="number" [(ngModel)]="product.igstPercent" name="igstPercent" 
-               placeholder="Enter Percentage Value">
+        <label for="currentQuantity">Current Stock*</label>
+        <input type="number" id="currentQuantity" [(ngModel)]="product.currentQuantity" 
+               name="currentQuantity" placeholder="0" min="0" required>
       </div>
 
       <div class="form-group">
-        <label>CGST %</label>
-        <input type="number" [(ngModel)]="product.cgstPercent" name="cgstPercent" 
-               placeholder="Enter Percentage Value">
+        <label for="thresholdQuantity">Threshold Quantity</label>
+        <input type="number" id="thresholdQuantity" 
+               [(ngModel)]="product.thresholdQuantity" 
+               name="thresholdQuantity" placeholder="0" min="0">
       </div>
+    </div>
 
-      <div class="form-group">
-        <label>SGST %</label>
-        <input type="number" [(ngModel)]="product.sgstPercent" name="sgstPercent" 
-               placeholder="Enter Percentage Value">
-      </div>
-
-      <!-- Row 4 - Stock Information -->
-      <div class="form-group">
-        <label>Stock Keeping Unit</label>
-        <input type="text" [(ngModel)]="product.stockKeepingUnit" name="stockKeepingUnit" 
-               placeholder="Enter Stock Keeping Unit">
-      </div>
-
-      <div class="form-group">
-        <label>Latest Unit Price</label>
-        <input type="number" [(ngModel)]="product.latestUnitPrice" name="latestUnitPrice" 
-               placeholder="Enter Unit Price">
-      </div>
-
-      <div class="form-group">
-        <label>Latest PO Date</label>
-        <div class="date-input-container">
-          <input type="text" [(ngModel)]="product.latestPODate" name="latestPODate" 
-                 placeholder="Select PO Date">
-          <button type="button" class="calendar-button">
-            <mat-icon>calendar_today</mat-icon>
+    <!-- Image Upload Section -->
+    <div class="images-section mt-4">
+      <label class="section-label">Product Images</label>
+      <div class="image-upload-container">
+        <div class="upload-zone" *ngIf="!imagePreviewUrl">
+          <input type="file" #fileInput hidden (change)="onImageSelected($event)" 
+                 accept="image/*">
+          <button type="button" class="btn btn-outline-primary" 
+                  (click)="fileInput.click()">
+            Choose Image
           </button>
+          <p class="text-muted mt-2">Supported formats: JPG, PNG (Max 5MB)</p>
         </div>
-      </div>
-
-      <div class="form-group">
-        <label>Latest PO Number</label>
-        <input type="text" [(ngModel)]="product.latestPONumber" name="latestPONumber" 
-               placeholder="Enter PO Number">
-      </div>
-
-      <div class="form-group">
-        <label>Opening Stock</label>
-        <input type="number" [(ngModel)]="product.openingStock" name="openingStock" 
-               placeholder="Enter Opening Stock Count">
-      </div>
-
-      <!-- Row 5 - Additional Stock Details -->
-      <div class="form-group">
-        <label>Current Quantity</label>
-        <input type="number" [(ngModel)]="product.currentQuantity" name="currentQuantity" 
-               placeholder="Enter Current Quantity Count">
-      </div>
-
-      <div class="form-group">
-        <label>Threshold Quantity</label>
-        <input type="number" [(ngModel)]="product.thresholdQuantity" name="thresholdQuantity" 
-               placeholder="Enter Threshold Quantity">
-      </div>
-
-      <div class="form-group">
-        <label>Stock Level Alert</label>
-        <select [(ngModel)]="product.stockLevelAlert" name="stockLevelAlert">
-          <option value="">Select Level Alert</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-      </div>
-
-      <div class="form-group" style="grid-column: span 2;">
-        <label>Product Description</label>
-        <input type="text" [(ngModel)]="product.productDescription" name="productDescription" 
-               placeholder="Enter Product Description">
+        <div class="preview-zone" *ngIf="imagePreviewUrl">
+          <img [src]="imagePreviewUrl" alt="Product preview" class="img-preview">
+          <button type="button" class="btn btn-danger mt-2" 
+                  (click)="removeImage()">Remove</button>
+        </div>
       </div>
     </div>
 
-    <div class="images-subproduct-container">
-      <label>Product Images</label>
-      <div class="image-upload-row">
-        <div class="image-upload-container">
-          <div class="upload-content" *ngIf="!imagePreview">
-            <mat-icon>cloud_upload</mat-icon>
-            <p>Browse and choose the image you want to upload from your computer</p>
-            <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept="image/*">
-            <button type="button" (click)="fileInput.click()" class="upload-button">
-              Choose File
-            </button>
-          </div>
-          <div class="image-preview" *ngIf="imagePreview">
-            <img [src]="imagePreview" alt="Product preview">
-            <button type="button" class="remove-image" (click)="removeImage()">
-              <mat-icon>close</mat-icon>
-            </button>
-          </div>
-        </div>
-        <button type="button" (click)="addSubProduct()" class="add-sub-product-button" style="margin-left: 10px;">
-          Add Sub Product <span class="plus-icon">+</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="sub-products-container" *ngIf="showSubProducts">
-      <table class="sub-products-table">
-        <thead>
+    <!-- Sub Products Section -->
+    <div class="sub-products-section mt-4" *ngIf="showSubProducts">
+      <h4>Sub Products</h4>
+      <table class="table table-bordered">
+        <thead class="thead-light">
           <tr>
-            <th>S No</th>
-            <th>Sub Material Name</th>
-            <th>Description</th>
-           
-            <th>Action</th>
+            <th scope="col" width="5%">#</th>
+            <th scope="col" width="40%">Sub Material Name</th>
+            <th scope="col" width="40%">Description</th>
+            <th scope="col" width="15%">Action</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let item of subProducts; let i = index">
             <td>{{i + 1}}</td>
             <td>
-              <input 
-                type="text" 
-                [(ngModel)]="item.materialName" 
-                name="materialName{{i}}" 
-                class="editable-input"
-                placeholder="Enter material name">
+              <input type="text" [(ngModel)]="item.materialName" 
+                     [name]="'materialName' + i" class="form-control"
+                     placeholder="Enter material name" required>
             </td>
             <td>
-              <input 
-                type="text" 
-                [(ngModel)]="item.description" 
-                name="description{{i}}" 
-                class="editable-input"
-                placeholder="Enter description">
+              <input type="text" [(ngModel)]="item.description" 
+                     [name]="'description' + i" class="form-control"
+                     placeholder="Enter description">
             </td>
-            
             <td>
-              <button class="delete-button" (click)="deleteSubProduct(item.id)">
-                <mat-icon class="delete-icon">delete</mat-icon>
+              <button type="button" class="btn btn-danger btn-sm" 
+                      (click)="deleteSubProduct(item.id)">
+                <i class="fas fa-trash"></i>
               </button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <div class="add-new-container">
-        <button class="add-new-button" (click)="addNewSubProduct()">
-          Add New <span class="plus-icon">+</span>
-        </button>
-      </div>
+      <button type="button" class="btn btn-outline-primary" 
+              (click)="addNewSubProduct()">
+        Add New Sub Product <i class="fas fa-plus"></i>
+      </button>
     </div>
 
-    <div class="form-actions">
-      <button type="button" (click)="onReset()" class="reset-button">
-        Reset Data
-      </button>
-      <button type="submit" class="save-button">
-        Save
-      </button>
+    <!-- Form Actions -->
+    <div class="form-actions mt-4">
+      <button type="button" class="btn btn-secondary me-2" 
+              (click)="onReset()">Reset</button>
+      <button type="submit" class="btn btn-primary" 
+              [disabled]="!productForm.form.valid">Save Product</button>
     </div>
-  </form>
+  </form>
 </div>

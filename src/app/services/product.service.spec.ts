@@ -1,32 +1,16 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { TestBed } from '@angular/core/testing';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class ProductService {
-  private dbUrl = 'http://localhost:3000/products'; // JSON Server URL
+import { ProductsService } from './product.service';
 
-  constructor(private http: HttpClient) {}
+describe('ProductService', () => {
+  let service: ProductsService;
 
-  // Add a new product
-  addProduct(product: any): Observable<any> {
-    return this.http.post<any>(this.dbUrl, product);
-  }
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(ProductsService);
+  });
 
-  // Get all products
-  getProducts(): Observable<any[]> {
-    return this.http.get<any[]>(this.dbUrl);
-  }
-
-  // Update a product
-  updateProduct(id: number, product: any): Observable<any> {
-    return this.http.put<any>(`${this.dbUrl}/${id}`, product);
-  }
-
-  // Delete a product
-  deleteProduct(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.dbUrl}/${id}`);
-  }
-}
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});

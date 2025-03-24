@@ -6,6 +6,8 @@ import { SupportComponent } from './components/support/support.component';
 import { AddMaterialDialogComponent } from './components/add-material-dialog/add-material-dialog.component';
 import { ProductsComponent } from './components/products/products.component';
 import { AddProductComponent } from './components/add-product/add-product.component';
+
+
 export const routes: Routes = [
   {
     path: 'dashboard',
@@ -48,8 +50,16 @@ export const routes: Routes = [
     component:AddProductComponent
   },
   {
+    path: 'edit-product/:id',
+    component: AddProductComponent
+  },
+  {
+    path: 'products/edit/:id',
+    component: AddProductComponent
+  },
+  {
     path: '**',
     redirectTo:'products'
   }
 ];
-    
+

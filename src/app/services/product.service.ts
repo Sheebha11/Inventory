@@ -6,8 +6,8 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root'
 })
 export class ProductsService {
-  private apiUrl = 'http://localhost:3000/products'; // adjust this to your API URL
- 
+  private apiUrl = 'http://localhost:3000/api'; // adjust this to your API URL
+
   constructor(private http: HttpClient) {}
 
   addProduct(productData: any): Observable<any> {
