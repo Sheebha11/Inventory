@@ -886,4 +886,4 @@ export class ProductsComponent implements OnInit {
     localStorage.removeItem('editProduct');
     this.router.navigate(['/products']);
   }
-}
+} 

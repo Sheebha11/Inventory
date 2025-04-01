@@ -28,6 +28,7 @@ export interface Product {
   thresholdQuantity: number;
   reorderQuantity: number;
   maximumQuantity: number;
+  stockLevelAlert: string;
   
   // Location and tracking
   binLocation: string;

@@ -1,5 +1,7 @@
 {
-  "products": [
-    
-  ]
+  "name": "Product Name",
+  "description": "Product Description",
+  "price": 99.99,
+  "quantity": 10,
+  "category": "Category Name"
 }

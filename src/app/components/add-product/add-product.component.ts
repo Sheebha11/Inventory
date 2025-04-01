@@ -12,6 +12,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
+import { finalize } from 'rxjs/operators';
+import moment from 'moment';
+
+import { environment } from '../../../environments/environment';
 
 interface SubProduct {
   id: number;
@@ -790,22 +794,12 @@ export class AddProductComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Check for edit mode and load product data
     this.route.queryParams.subscribe(params => {
       if (params['mode'] === 'edit' && params['id']) {
         this.isEditMode = true;
         this.editProductId = Number(params['id']);
-        console.log('Loading product for editing:', this.editProductId);
         this.loadEditData();
-      }
-    });
-  }
-
-  ngAfterViewInit() {
-    // Allow the UI to render first
-    setTimeout(() => {
-      if (this.isEditMode) {
-        this.calculateValues();
-        this.calculateTargetedSellingPrice();
       }
     });
   }
@@ -815,16 +809,16 @@ export class AddProductComponent implements OnInit {
     if (editProductData) {
       const productData = JSON.parse(editProductData);
       
-      // Map all fields from stored data to form fields
+      // Update the product object with all financial values
       this.product = {
-        // Basic Product Info
+        // Existing mappings
         hsnCode: productData.materialCode || '',
         Product: productData.materialName || '',
         ProductCategory: productData.materialCategory || '',
         uom: productData.unitOfMeasurement || '',
         binLocation: productData.locationId || '',
         
-        // Financial Information
+        // Financial values
         unitPrice: productData.unitPrice?.toString() || '0',
         landingChargesPercent: productData.landingChargesPercent?.toString() || '0',
         landingCharges: productData.landingCharges?.toString() || '0',
@@ -832,44 +826,39 @@ export class AddProductComponent implements OnInit {
         profitPercent: productData.profitPercent?.toString() || '0',
         targetedSellingPrice: productData.targetedSellingPrice?.toString() || '0',
         
-        // GST Information
+        // GST related fields
         gstApplicable: productData.gstApplicable || 'no',
-        igstPercent: productData.igstPercent?.toString() || '0',
-        cgstPercent: productData.cgstPercent?.toString() || '0',
-        sgstPercent: productData.sgstPercent?.toString() || '0',
+        igstPercent: productData.gstRate?.toString() || '0',
+        cgstPercent: (productData.gstRate / 2)?.toString() || '0',
+        sgstPercent: (productData.gstRate / 2)?.toString() || '0',
         
-        // Stock Information
+        // Stock related fields
         stockKeepingUnit: productData.stockKeepingUnit || '',
         latestUnitPrice: productData.latestUnitPrice?.toString() || '0',
         latestPODate: productData.latestPODate || '',
         latestPONumber: productData.latestPONumber || '',
         openingStock: productData.openingStock?.toString() || '0',
-        currentQuantity: productData.currentQuantity?.toString() || '0',
+        currentQuantity: productData.quantity?.toString() || '0',
         thresholdQuantity: productData.thresholdQuantity?.toString() || '0',
         stockLevelAlert: productData.stockLevelAlert || '',
-        
-        // Additional Information
         productDescription: productData.description || '',
         productImage: null
       };
 
-      // Update calculations
+      // Trigger calculations after loading data
       this.calculateValues();
       this.calculateTargetedSellingPrice();
 
-      // Set image preview
+      // Set image preview if available
       if (productData.imageUrl) {
         this.imagePreviewUrl = productData.imageUrl;
       }
 
-      // Set sub products if they exist
+      // Load sub products if any
       if (productData.subProducts && Array.isArray(productData.subProducts)) {
         this.subProducts = productData.subProducts;
         this.showSubProducts = this.subProducts.length > 0;
       }
-
-      // Log loaded data for verification
-      console.log('Loaded product data:', this.product);
     }
   }
 
@@ -943,7 +932,70 @@ export class AddProductComponent implements OnInit {
     }
 
     this.isSubmitting = true;
+    const formData = new FormData();
 
+    // Type-safe way to append product properties
+    formData.append('hsnCode', this.product.hsnCode);
+    formData.append('Product', this.product.Product);
+    formData.append('ProductCategory', this.product.ProductCategory);
+    formData.append('uom', this.product.uom);
+    formData.append('binLocation', this.product.binLocation);
+    formData.append('unitPrice', this.product.unitPrice);
+    formData.append('landingChargesPercent', this.product.landingChargesPercent);
+    formData.append('landingCharges', this.product.landingCharges);
+    formData.append('costOfProduct', this.product.costOfProduct);
+    formData.append('profitPercent', this.product.profitPercent);
+    formData.append('targetedSellingPrice', this.product.targetedSellingPrice);
+    formData.append('gstApplicable', this.product.gstApplicable);
+    formData.append('igstPercent', this.product.igstPercent);
+    formData.append('cgstPercent', this.product.cgstPercent);
+    formData.append('sgstPercent', this.product.sgstPercent);
+    formData.append('stockKeepingUnit', this.product.stockKeepingUnit);
+    formData.append('latestUnitPrice', this.product.latestUnitPrice);
+    formData.append('latestPODate', this.product.latestPODate);
+    formData.append('latestPONumber', this.product.latestPONumber);
+    formData.append('openingStock', this.product.openingStock);
+    formData.append('currentQuantity', this.product.currentQuantity);
+    formData.append('thresholdQuantity', this.product.thresholdQuantity);
+    formData.append('stockLevelAlert', this.product.stockLevelAlert);
+    formData.append('productDescription', this.product.productDescription);
+    
+    this.productService.addProductWithImage(formData).subscribe({
+      next: (response) => console.log('✅ Product added with image:', response),
+      error: (error) => console.error('❌ Error:', error)
+    });
+
+    const formattedLatestPODate = moment(this.product.latestPODate).format('YYYY-MM-DD');
+    console.log(formattedLatestPODate); // It will print the date in 'YYYY-MM-DD' format
+    console.log(moment('2025-04-01').format('YYYY-MM-DD'));
+    
+
+    // Append sub-products
+    if (this.subProducts && this.subProducts.length > 0) {
+      formData.append('subProducts', JSON.stringify(this.subProducts));
+    }
+
+    // Rest of the method remains the same...
+    this.productService.addProduct(formData)
+      .pipe(
+        finalize(() => this.isSubmitting = false)
+      )
+      .subscribe({
+        next: (response) => {
+          this.showNotification("Product saved successfully!", 'success');
+          setTimeout(() => {
+            this.router.navigate(['/products']);
+          }, 1000);
+        },
+        error: (error) => {
+          console.error('Error saving product:', error);
+          this.showNotification('Error saving product', 'error');
+        }
+      });
+
+  
+
+  
     const productData = {
       id: this.isEditMode ? this.editProductId : Date.now(),
       sNo: this.isEditMode ? this.editProductId : this.getNextSerialNumber(),
@@ -996,10 +1048,7 @@ export class AddProductComponent implements OnInit {
         localStorage.removeItem('editProduct');
       }
 
-      this.showNotification(
-        `Product ${this.isEditMode ? 'updated' : 'saved'} successfully!`, 
-        'success'
-      );
+      this.showNotification(`Product ${this.isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
       
       setTimeout(() => {
         this.isSubmitting = false;
