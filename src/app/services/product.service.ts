@@ -35,19 +35,42 @@ export class ProductsService {
     );
   }
 
+  updateProduct(id: number, product: any, imageFile?: File): Observable<any> {
+    const formData = new FormData();
+  
+    // Append all product fields
+    for (const key in product) {
+      if (product.hasOwnProperty(key)) {
+        formData.append(key, product[key]);
+      }
+    }
+  
+    // Append image file if provided (new image selected)
+    if (imageFile) {
+      formData.append('productImage', imageFile);
+    } else {
+      // If no new image is selected, pass the existing image URL
+      formData.append('existingImageUrl', product.imageUrl);
+    }
+  
+    return this.http.put(`http://localhost:3000/api/products/${id}`, formData);
+  }
+  
+  
+
   // Rest of the methods remain the same...
   getProducts(): Observable<any[]> {
-    try {
-      const products = JSON.parse(localStorage.getItem('products') || '[]');
-      return of(products);
-    } catch (error) {
-      console.error('❌ Error getting products:', error);
-      return throwError(() => new Error('Error getting products'));
-    }
+    return this.http.get<any[]>('http://localhost:3000/api/products').pipe(
+      catchError(error => {
+        console.error('❌ Error getting products:', error);
+        return throwError(() => new Error('Error getting products'));
+      })
+    );
   }
-
+  
+  
   deleteProduct(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete(`http://localhost:3000/api/products/${id}`).pipe(
       catchError(error => {
         console.error('❌ Error deleting product:', error);
         return throwError(() => new Error('Error deleting product'));

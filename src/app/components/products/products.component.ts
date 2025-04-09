@@ -587,7 +587,7 @@ export class ProductsComponent implements OnInit {
 
         this.materials = this.dataSource;
 
-        console.log('Products loaded from localStorage:', this.dataSource);
+        console.log('Products loaded from backend:', this.dataSource);
         this.updateDashboardStats();
       },
       error: (error) => {
@@ -685,34 +685,21 @@ export class ProductsComponent implements OnInit {
   }
 
   deleteRow(index: number, row: any) {
-    if (confirm(`Are you sure you want to delete ${row.materialName}?`))  {
-      // First, remove from local array
-      this.dataSource = this.dataSource.filter((_, idx) => idx !== index);
-      
-      // Update serial numbers
-      this.dataSource = this.dataSource.map((item, idx) => ({
-        ...item,
-        sNo: idx + 1
-      }));
-
-      // Update localStorage
-      const products = JSON.parse(localStorage.getItem('products') || '[]');
-      const updatedProducts = products.filter((product: any) => product.id !== row.id);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
-
-      // Update materials array
-      this.materials = this.dataSource;
-
-      // Update dashboard stats
-      this.updateDashboardStats();
-
-      // Show success message
-      this.showNotification('Product deleted successfully', 'success');
-
-      // Refresh the table data
-      this.loadProducts();
+    if (confirm(`Are you sure you want to delete ${row.materialName}?`)) {
+      this.productService.deleteProduct(row.id).subscribe({
+        next: () => {
+          this.showNotification('Product deleted successfully', 'success');
+          this.loadProducts(); // Refresh the list
+        },
+        error: (error) => {
+          console.error('Delete error:', error);
+          this.showNotification('Failed to delete product', 'error');
+        }
+      });
     }
   }
+  
+  
 
   onDelete() {
     const selectedItems = this.dataSource.filter(item => item.selected);
@@ -739,6 +726,8 @@ export class ProductsComponent implements OnInit {
       this.updateDashboardStats();
     }
   }
+
+  
 
   selectRow(row: any) {
     // Clear previous selections
