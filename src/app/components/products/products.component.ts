@@ -552,6 +552,7 @@ export class ProductsComponent implements OnInit {
   
   dataSource: any[] = [];
   materials: any[] = [];
+  products: any[] = [];
   dashboardStats = {
     requiredReplenished: 0,
     sufficientlyStocked: 0,
@@ -571,6 +572,7 @@ export class ProductsComponent implements OnInit {
     this.productService.getProducts().subscribe({
       next: (products) => {
         this.dataSource = products.map((product: any, index: number) => ({
+          ...product,
           sNo: index + 1,
           materialName: product.materialName || product.Product,
           materialCode: product.materialCode || product.hsnCode,
@@ -579,15 +581,10 @@ export class ProductsComponent implements OnInit {
           quantity: product.quantity || product.currentQuantity,
           unitOfMeasurement: product.unitOfMeasurement || product.uom,
           locationId: product.locationId || product.binLocation,
-          dateAdded: new Date(product.dateAdded).toLocaleDateString(),
-          id: product.id,
-          thresholdQuantity: product.thresholdQuantity,
-          stockLevelAlert: product.stockLevelAlert
+          dateAdded: new Date(product.dateAdded).toLocaleDateString()
         }));
 
         this.materials = this.dataSource;
-
-        console.log('Products loaded from backend:', this.dataSource);
         this.updateDashboardStats();
       },
       error: (error) => {
@@ -598,13 +595,15 @@ export class ProductsComponent implements OnInit {
   }
 
   updateDashboardStats() {
-    const products = this.dataSource;
-    
-    this.dashboardStats = {
-      requiredReplenished: products.filter(p => p.quantity < (p.thresholdQuantity || 0)).length,
-      sufficientlyStocked: products.filter(p => p.quantity >= (p.thresholdQuantity || 0)).length,
-      minMovement: products.filter(p => p.stockLevelAlert === 'Low').length
-    };
+    this.productService.getDashboardStats().subscribe({
+      next: (stats) => {
+        this.dashboardStats = stats;
+      },
+      error: (error) => {
+        console.error('Error updating dashboard stats:', error);
+        this.showNotification('Error updating dashboard stats', 'error');
+      }
+    });
   }
 
   navigateToCreate() {
@@ -612,94 +611,74 @@ export class ProductsComponent implements OnInit {
     this.router.navigate(['/add-product']);
   }
 
-  // Update the onEdit method
   onEdit(row: any) {
     console.log('Editing product:', row);
-    
-    // Create a complete product object with all necessary fields
-    const productToEdit = {
+    // Store the complete product data in localStorage before navigation
+    const productData = {
       id: row.id,
-      materialName: row.materialName,
-      materialCode: row.materialCode,
-      materialCategory: row.materialCategory,
-      description: row.description,
-      quantity: row.quantity,
-      unitOfMeasurement: row.unitOfMeasurement,
-      locationId: row.locationId,
-      dateAdded: row.dateAdded,
-      
-      // Pricing details
+      hsnCode: row.materialCode,
+      Product: row.materialName,
+      ProductCategory: row.materialCategory,
+      uom: row.unitOfMeasurement,
+      binLocation: row.locationId,
       unitPrice: row.unitPrice || 0,
       landingChargesPercent: row.landingChargesPercent || 0,
       landingCharges: row.landingCharges || 0,
       costOfProduct: row.costOfProduct || 0,
       profitPercent: row.profitPercent || 0,
       targetedSellingPrice: row.targetedSellingPrice || 0,
-      
-      // Stock management
-      currentQuantity: row.quantity,
-      thresholdQuantity: row.thresholdQuantity || 0,
-      reorderQuantity: row.reorderQuantity || 0,
-      maximumQuantity: row.maximumQuantity || 0,
-      openingStock: row.openingStock || 0,
-      
-      // GST details
       gstApplicable: row.gstApplicable || 'no',
-      gstRate: row.gstRate || 0,
-      gstAmount: row.gstAmount || 0,
-      
-      // Location and identification
-      binLocation: row.locationId,
+      igstPercent: row.igstPercent || 0,
+      cgstPercent: row.cgstPercent || 0,
+      sgstPercent: row.sgstPercent || 0,
       stockKeepingUnit: row.stockKeepingUnit || '',
-      
-      // Purchase history
       latestUnitPrice: row.latestUnitPrice || 0,
       latestPODate: row.latestPODate || '',
       latestPONumber: row.latestPONumber || '',
-      
-      // Image
-      imageUrl: row.imageUrl || '',
-      
-      // Status
-      status: row.status || 'Active',
-      stockLevelAlert: row.stockLevelAlert || 'Normal'
+      openingStock: row.openingStock || 0,
+      currentQuantity: row.quantity || 0,
+      thresholdQuantity: row.thresholdQuantity || 0,
+      stockLevelAlert: row.stockLevelAlert || '',
+      productDescription: row.description || '',
+      imageUrl: row.imageUrl || ''
     };
 
-    try {
-      // Store the product data in localStorage
-      localStorage.setItem('editProduct', JSON.stringify(productToEdit));
-      
-      // Navigate to edit form
-      this.router.navigate(['/add-product'], { 
-        queryParams: { 
-          mode: 'edit',
-          id: row.id 
-        }
-      });
-      
-      console.log('Successfully stored edit data:', productToEdit);
-    } catch (error) {
-      console.error('Error preparing edit data:', error);
-      this.showNotification('Error preparing product data for edit', 'error');
-    }
+    localStorage.setItem('editProduct', JSON.stringify(productData));
+    
+    this.router.navigate(['/add-product'], { 
+      queryParams: { 
+        mode: 'edit',
+        id: row.id 
+      }
+    });
   }
 
   deleteRow(index: number, row: any) {
     if (confirm(`Are you sure you want to delete ${row.materialName}?`)) {
       this.productService.deleteProduct(row.id).subscribe({
-        next: () => {
-          this.showNotification('Product deleted successfully', 'success');
-          this.loadProducts(); // Refresh the list
+        next: (response) => {
+          // Remove from local data source
+          this.dataSource = this.dataSource.filter(item => item.id !== row.id);
+          
+          // Update serial numbers
+          this.dataSource = this.dataSource.map((item, index) => ({
+            ...item,
+            sNo: index + 1
+          }));
+
+          // Show success message
+          this.showNotification('Product deleted successfully from database', 'success');
+          
+          // Update dashboard stats
+          this.updateDashboardStats();
         },
         error: (error) => {
           console.error('Delete error:', error);
-          this.showNotification('Failed to delete product', 'error');
+          this.showNotification(error.message || 'Failed to delete product from database', 'error');
         }
       });
     }
   }
-  
-  
 
   onDelete() {
     const selectedItems = this.dataSource.filter(item => item.selected);
@@ -726,8 +705,6 @@ export class ProductsComponent implements OnInit {
       this.updateDashboardStats();
     }
   }
-
-  
 
   selectRow(row: any) {
     // Clear previous selections
@@ -875,4 +852,4 @@ export class ProductsComponent implements OnInit {
     localStorage.removeItem('editProduct');
     this.router.navigate(['/products']);
   }
-} 
+}

@@ -14,8 +14,9 @@ import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import moment from 'moment';
-
+import { FormGroup } from '@angular/forms';
 import { environment } from '../../../environments/environment';
+import { Product } from '../../models/product.interface';
 
 interface SubProduct {
   id: number;
@@ -745,6 +746,7 @@ interface SubProduct {
   `]
 })
 export class AddProductComponent implements OnInit {
+  productForm!: FormGroup;
   product = {
     hsnCode: '',
     Product: '',
@@ -775,7 +777,8 @@ export class AddProductComponent implements OnInit {
 
   subProducts: SubProduct[] = [];
   temporaryProducts: any[] = [];
-    
+  
+
   showSubProducts = false;
   imagePreviewUrl: string | null = null;
   isSubmitting = false;
@@ -784,6 +787,7 @@ export class AddProductComponent implements OnInit {
   newItemName: string = '';
   isEditMode = false;
   editProductId: number | null = null;
+
 
   constructor(
     private http: HttpClient,
@@ -794,72 +798,60 @@ export class AddProductComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Check for edit mode and load product data
     this.route.queryParams.subscribe(params => {
       if (params['mode'] === 'edit' && params['id']) {
         this.isEditMode = true;
-        this.editProductId = Number(params['id']);
-        this.loadEditData();
+        this.editProductId = params['id'];
+        // Get selected product from localStorage
+        const editProductData = localStorage.getItem('editProduct');
+        if (editProductData) {
+          const productData = JSON.parse(editProductData);
+          this.loadEditData(productData);
+        }
       }
     });
   }
 
-  loadEditData() {
-    const editProductData = localStorage.getItem('editProduct');
-    if (editProductData) {
-      const productData = JSON.parse(editProductData);
-      
-      // Update the product object with all financial values
-      this.product = {
-        // Existing mappings
-        hsnCode: productData.materialCode || '',
-        Product: productData.materialName || '',
-        ProductCategory: productData.materialCategory || '',
-        uom: productData.unitOfMeasurement || '',
-        binLocation: productData.locationId || '',
-        
-        // Financial values
-        unitPrice: productData.unitPrice?.toString() || '0',
-        landingChargesPercent: productData.landingChargesPercent?.toString() || '0',
-        landingCharges: productData.landingCharges?.toString() || '0',
-        costOfProduct: productData.costOfProduct?.toString() || '0',
-        profitPercent: productData.profitPercent?.toString() || '0',
-        targetedSellingPrice: productData.targetedSellingPrice?.toString() || '0',
-        
-        // GST related fields
-        gstApplicable: productData.gstApplicable || 'no',
-        igstPercent: productData.gstRate?.toString() || '0',
-        cgstPercent: (productData.gstRate / 2)?.toString() || '0',
-        sgstPercent: (productData.gstRate / 2)?.toString() || '0',
-        
-        // Stock related fields
-        stockKeepingUnit: productData.stockKeepingUnit || '',
-        latestUnitPrice: productData.latestUnitPrice?.toString() || '0',
-        latestPODate: productData.latestPODate || '',
-        latestPONumber: productData.latestPONumber || '',
-        openingStock: productData.openingStock?.toString() || '0',
-        currentQuantity: productData.quantity?.toString() || '0',
-        thresholdQuantity: productData.thresholdQuantity?.toString() || '0',
-        stockLevelAlert: productData.stockLevelAlert || '',
-        productDescription: productData.description || '',
-        productImage: null
-      };
+  loadEditData(productData: any) {
+    if (!productData) return;
+  
+    // Directly map the values from stored data
+    this.product = {
+      hsnCode: productData.hsnCode || '',
+      Product: productData.Product || '',
+      ProductCategory: productData.ProductCategory || '',
+      uom: productData.uom || '',
+      binLocation: productData.binLocation || '',
+      unitPrice: productData.unitPrice?.toString() || '',
+      landingChargesPercent: productData.landingChargesPercent?.toString() || '',
+      landingCharges: productData.landingCharges?.toString() || '',
+      costOfProduct: productData.costOfProduct?.toString() || '',
+      profitPercent: productData.profitPercent?.toString() || '',
+      targetedSellingPrice: productData.targetedSellingPrice?.toString() || '',
+      gstApplicable: productData.gstApplicable || '',
+      igstPercent: productData.igstPercent?.toString() || '',
+      cgstPercent: productData.cgstPercent?.toString() || '',
+      sgstPercent: productData.sgstPercent?.toString() || '',
+      stockKeepingUnit: productData.stockKeepingUnit || '',
+      latestUnitPrice: productData.latestUnitPrice?.toString() || '',
+      latestPODate: productData.latestPODate || '',
+      latestPONumber: productData.latestPONumber || '',
+      openingStock: productData.openingStock?.toString() || '',
+      currentQuantity: productData.currentQuantity?.toString() || '',
+      thresholdQuantity: productData.thresholdQuantity?.toString() || '',
+      stockLevelAlert: productData.stockLevelAlert || '',
+      productDescription: productData.productDescription || '',
+      productImage: null
+    };
 
-      // Trigger calculations after loading data
-      this.calculateValues();
-      this.calculateTargetedSellingPrice();
-
-      // Set image preview if available
-      if (productData.imageUrl) {
-        this.imagePreviewUrl = productData.imageUrl;
-      }
-
-      // Load sub products if any
-      if (productData.subProducts && Array.isArray(productData.subProducts)) {
-        this.subProducts = productData.subProducts;
-        this.showSubProducts = this.subProducts.length > 0;
-      }
+    // Set image preview if available
+    if (productData.imageUrl) {
+      this.imagePreviewUrl = productData.imageUrl;
     }
+
+    // Update calculations
+    this.calculateValues();
+    this.calculateTargetedSellingPrice();
   }
 
   onFileSelected(event: Event) {
@@ -925,89 +917,21 @@ export class AddProductComponent implements OnInit {
   }
 
   onSubmit(form: any) {
-    // Check if required fields are filled
     if (!this.validateForm()) {
       this.showNotification('Please fill all required fields', 'error');
       return;
     }
-
+  
     this.isSubmitting = true;
     const formData = new FormData();
-
-    // Type-safe way to append product properties
-    formData.append('hsnCode', this.product.hsnCode);
-    formData.append('Product', this.product.Product);
-    formData.append('ProductCategory', this.product.ProductCategory);
-    formData.append('uom', this.product.uom);
-    formData.append('binLocation', this.product.binLocation);
-    formData.append('unitPrice', this.product.unitPrice);
-    formData.append('landingChargesPercent', this.product.landingChargesPercent);
-    formData.append('landingCharges', this.product.landingCharges);
-    formData.append('costOfProduct', this.product.costOfProduct);
-    formData.append('profitPercent', this.product.profitPercent);
-    formData.append('targetedSellingPrice', this.product.targetedSellingPrice);
-    formData.append('gstApplicable', this.product.gstApplicable);
-    formData.append('igstPercent', this.product.igstPercent);
-    formData.append('cgstPercent', this.product.cgstPercent);
-    formData.append('sgstPercent', this.product.sgstPercent);
-    formData.append('stockKeepingUnit', this.product.stockKeepingUnit);
-    formData.append('latestUnitPrice', this.product.latestUnitPrice);
-    formData.append('latestPODate', this.product.latestPODate);
-    formData.append('latestPONumber', this.product.latestPONumber);
-    formData.append('openingStock', this.product.openingStock);
-    formData.append('currentQuantity', this.product.currentQuantity);
-    formData.append('thresholdQuantity', this.product.thresholdQuantity);
-    formData.append('stockLevelAlert', this.product.stockLevelAlert);
-    formData.append('productDescription', this.product.productDescription);
-    
-    this.productService.addProductWithImage(formData).subscribe({
-      next: (response) => console.log('✅ Product added with image:', response),
-      error: (error) => console.error('❌ Error:', error)
-    });
-
-    const formattedLatestPODate = moment(this.product.latestPODate).format('YYYY-MM-DD');
-    console.log(formattedLatestPODate); // It will print the date in 'YYYY-MM-DD' format
-    console.log(moment('2025-04-01').format('YYYY-MM-DD'));
-    
-
-    // Append sub-products
-    if (this.subProducts && this.subProducts.length > 0) {
-      formData.append('subProducts', JSON.stringify(this.subProducts));
-    }
-
-    // Rest of the method remains the same...
-    this.productService.addProduct(formData)
-      .pipe(
-        finalize(() => this.isSubmitting = false)
-      )
-      .subscribe({
-        next: (response) => {
-          this.showNotification("Product saved successfully!", 'success');
-          setTimeout(() => {
-            this.router.navigate(['/products']);
-          }, 1000);
-        },
-        error: (error) => {
-          console.error('Error saving product:', error);
-          this.showNotification('Error saving product', 'error');
-        }
-      });
-
   
-
-  
-    const productData = {
-      id: this.isEditMode ? this.editProductId : Date.now(),
-      sNo: this.isEditMode ? this.editProductId : this.getNextSerialNumber(),
-      materialName: this.product.Product,
-      materialCode: this.product.hsnCode,
-      materialCategory: this.product.ProductCategory,
-      description: this.product.productDescription,
-      quantity: this.product.currentQuantity,
-      unitOfMeasurement: this.product.uom,
-      locationId: this.product.binLocation,
-      dateAdded: new Date().toISOString(),
-      imageUrl: this.imagePreviewUrl,
+    // Create a clean product object with only the necessary data
+    const cleanProductData = {
+      hsnCode: this.product.hsnCode,
+      Product: this.product.Product,
+      ProductCategory: this.product.ProductCategory,
+      uom: this.product.uom,
+      binLocation: this.product.binLocation,
       unitPrice: this.product.unitPrice,
       landingChargesPercent: this.product.landingChargesPercent,
       landingCharges: this.product.landingCharges,
@@ -1023,43 +947,61 @@ export class AddProductComponent implements OnInit {
       latestPODate: this.product.latestPODate,
       latestPONumber: this.product.latestPONumber,
       openingStock: this.product.openingStock,
+      currentQuantity: this.product.currentQuantity,
       thresholdQuantity: this.product.thresholdQuantity,
-      stockLevelAlert: this.product.stockLevelAlert
+      stockLevelAlert: this.product.stockLevelAlert,
+      productDescription: this.product.productDescription
     };
-
-    try {
-      const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
-      
-      if (this.isEditMode) {
-        // Update existing product
-        const index = existingProducts.findIndex((p: any) => p.id === this.editProductId);
-        if (index !== -1) {
-          existingProducts[index] = productData;
+  
+    // Append clean data to FormData
+    Object.entries(cleanProductData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value.toString());
+      }
+    });
+  
+    // Handle image separately
+    if (this.product.productImage) {
+      formData.append('productImage', this.product.productImage);
+    }
+  
+    // Handle sub-products
+    if (this.subProducts && this.subProducts.length > 0) {
+      formData.append('subProducts', JSON.stringify(this.subProducts));
+    }
+  
+    // Determine if we're updating or creating
+    if (this.isEditMode && this.editProductId) {
+      this.productService.updateProduct(this.editProductId, formData).subscribe({
+        next: (response) => {
+          this.showNotification('Product updated successfully!', 'success');
+          this.router.navigate(['/products']);
+        },
+        error: (error) => {
+          console.error('Error updating product:', error);
+          this.showNotification('Error updating product', 'error');
+        },
+        complete: () => {
+          this.isSubmitting = false;
         }
-      } else {
-        // Add new product
-        existingProducts.push(productData);
-      }
-
-      localStorage.setItem('products', JSON.stringify(existingProducts));
-      
-      // Clean up edit data if in edit mode
-      if (this.isEditMode) {
-        localStorage.removeItem('editProduct');
-      }
-
-      this.showNotification(`Product ${this.isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
-      
-      setTimeout(() => {
-        this.isSubmitting = false;
-        this.router.navigate(['/products']);
-      }, 1000);
-    } catch (error) {
-      console.error('Error saving product:', error);
-      this.showNotification('Error saving product', 'error');
-      this.isSubmitting = false;
+      });
+    } else {
+      this.productService.addProduct(formData).subscribe({
+        next: (response) => {
+          this.showNotification('Product added successfully!', 'success');
+          this.router.navigate(['/products']);
+        },
+        error: (error) => {
+          console.error('Error adding product:', error);
+          this.showNotification('Error adding product', 'error');
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        }
+      });
     }
   }
+  
 
   private getNextSerialNumber(): number {
     const products = JSON.parse(localStorage.getItem('products') || '[]');
@@ -1188,6 +1130,6 @@ export class AddProductComponent implements OnInit {
   }
 
   removeItem(index: number) {
-    this.subProducts.splice(index, 1);
-}
+    this.subProducts.splice(index, 1);
+  }
 }

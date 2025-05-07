@@ -1,48 +1,39 @@
 export interface Product {
   id: number;
-  sNo: number;
-  materialName: string;
   materialCode: string;
+  materialName: string;
   materialCategory: string;
-  description?: string;
-  quantity: number;
   unitOfMeasurement: string;
   locationId: string;
-  dateAdded: string;
-  
-  // Pricing fields
-  unitPrice: number;
-  landingChargesPercent: number;
-  landingCharges: number;
-  costOfProduct: number;
-  profitPercent: number;
-  targetedSellingPrice: number;
-  
-  // GST fields
+  hsnCode: string;
+  Product: string;
+  ProductCategory: string;
+  uom: string;
+  binLocation: string;
+  unitPrice: string;
+  landingChargesPercent: string;
+  landingCharges: string;
+  costOfProduct: string;
+  profitPercent: string;
+  targetedSellingPrice: string;
   gstApplicable: string;
   gstRate: number;
   gstAmount: number;
-  
-  // Stock management
-  currentQuantity: number;
-  thresholdQuantity: number;
-  reorderQuantity: number;
-  maximumQuantity: number;
+  currentQuantity: string;
+  thresholdQuantity: string;
+  reorderQuantity: string;
+  maximumQuantity: string;
   stockLevelAlert: string;
-  
-  // Location and tracking
-  binLocation: string;
-  stockKeepingUnit: string;
-  
-  // Purchase info
-  latestUnitPrice: number;
+  latestUnitPrice: string;
   latestPODate: string;
   latestPONumber: string;
-  openingStock: number;
-  
-  // Optional fields
-  imageUrl?: string;
-  subProducts?: any[];
+  openingStock: string;
   sellingPrice: number;
   minimumSellingPrice: number;
+  imageUrl: string;
+  stockKeepingUnit: string;
+  quantity: string;
+  description: string;
+  subProducts: any[];
+  productImage: File | null;
 }

@@ -95,7 +95,7 @@
       <label class="section-label">Product Images</label>
       <div class="image-upload-container">
         <div class="upload-zone" *ngIf="!imagePreviewUrl">
-          <input type="file" #fileInput hidden (change)="onImageSelected($event)" 
+          <input type="file"  (change)="onFileSelected($event)" 
                  accept="image/*">
           <button type="button" class="btn btn-outline-primary" 
                   (click)="fileInput.click()">
