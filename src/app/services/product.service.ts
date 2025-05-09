@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Product } from '../models/product.interface';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, retry, map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductsService {
-  private apiUrl = 'http://localhost:3000/api/products';
+  private apiUrl = `${environment.apiUrl}/products`;
 
   constructor(private http: HttpClient) {}
 
@@ -21,21 +22,31 @@ export class ProductsService {
     );
   }
 
-  updateProduct(id: number, product: any, imageFile?: File): Observable<any> {
-    const formData = new FormData();
-  
-    // Append all product fields
-    for (const key in product) {
-      if (product.hasOwnProperty(key)) {
-        formData.append(key, product[key]);
-      }
+  updateProduct(id: number, productData: any): Observable<any> {
+    let formData: FormData;
+    
+    // Check if productData is already FormData
+    if (productData instanceof FormData) {
+      formData = productData;
+    } else {
+      formData = new FormData();
+      // Convert flat object to FormData
+      Object.keys(productData).forEach(key => {
+        if (productData[key] !== null && productData[key] !== undefined) {
+          if (key === 'latestPODate' && productData[key]) {
+            formData.append(key, new Date(productData[key]).toISOString());
+          } else {
+            formData.append(key, productData[key].toString());
+          }
+        }
+      });
     }
-  
-    // Append image file if provided
-    if (imageFile) {
-      formData.append('productImage', imageFile);
+
+    // Log formData entries for debugging
+    for (const pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
     }
-  
+
     return this.http.put(`${this.apiUrl}/${id}`, formData).pipe(
       catchError(error => {
         console.error('❌ Error updating product:', error);
@@ -47,17 +58,23 @@ export class ProductsService {
   getProducts(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl).pipe(
       catchError(error => {
-        console.error('❌ Error getting products:', error);
-        return throwError(() => new Error('Error getting products'));
+        console.error('Error fetching products:', error);
+        return throwError(() => new Error('Error fetching products'));
       })
     );
   }
   
   getProductById(id: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+      map(response => {
+        if (!response) {
+          throw new Error('Product not found');
+        }
+        return response;
+      }),
       catchError(error => {
-        console.error('❌ Error getting product by ID:', error);
-        return throwError(() => new Error('Error getting product by ID'));
+        console.error('Error fetching product:', error);
+        return throwError(() => error);
       })
     );
   }

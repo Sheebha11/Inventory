@@ -16,13 +16,41 @@ import { finalize } from 'rxjs/operators';
 import moment from 'moment';
 import { FormGroup } from '@angular/forms';
 import { environment } from '../../../environments/environment';
-import { Product } from '../../models/product.interface';
 
 interface SubProduct {
   id: number;
   masterName: string;
   materialName: string;
   description: string;
+}
+
+interface ProductData {
+  [key: string]: string | number | null | File | undefined;
+  hsnCode: string;
+  Product: string;
+  ProductCategory: string;
+  uom: string;
+  binLocation: string;
+  unitPrice: string | number;
+  landingChargesPercent: string | number;
+  landingCharges: string | number;
+  costOfProduct: string | number;
+  profitPercent: string | number;
+  targetedSellingPrice: string | number;
+  gstApplicable: string;
+  igstPercent: string | number;
+  cgstPercent: string | number;
+  sgstPercent: string | number;
+  stockKeepingUnit: string;
+  latestUnitPrice: string | number;
+  latestPODate: string;
+  latestPONumber: string;
+  openingStock: string | number;
+  currentQuantity: string | number;
+  thresholdQuantity: string | number;
+  stockLevelAlert: string;
+  productDescription: string;
+  productImage?: File | null;
 }
 
 @Component({
@@ -747,7 +775,7 @@ interface SubProduct {
 })
 export class AddProductComponent implements OnInit {
   productForm!: FormGroup;
-  product = {
+  product: ProductData = {
     hsnCode: '',
     Product: '',
     ProductCategory: '',
@@ -772,7 +800,7 @@ export class AddProductComponent implements OnInit {
     thresholdQuantity: '',
     stockLevelAlert: '',
     productDescription: '',
-    productImage: null as File | null
+    productImage: null
   };
 
   subProducts: SubProduct[] = [];
@@ -815,8 +843,20 @@ export class AddProductComponent implements OnInit {
   loadEditData(productData: any) {
     if (!productData) return;
   
-    // Directly map the values from stored data
+    // Format date from ISO to yyyy-MM-dd
+    const formatDate = (dateString: string) => {
+      if (!dateString) return '';
+      try {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+      } catch {
+        return '';
+      }
+    };
+
+  
     this.product = {
+      // ...existing properties...
       hsnCode: productData.hsnCode || '',
       Product: productData.Product || '',
       ProductCategory: productData.ProductCategory || '',
@@ -834,7 +874,7 @@ export class AddProductComponent implements OnInit {
       sgstPercent: productData.sgstPercent?.toString() || '',
       stockKeepingUnit: productData.stockKeepingUnit || '',
       latestUnitPrice: productData.latestUnitPrice?.toString() || '',
-      latestPODate: productData.latestPODate || '',
+      latestPODate: formatDate(productData.latestPODate),
       latestPONumber: productData.latestPONumber || '',
       openingStock: productData.openingStock?.toString() || '',
       currentQuantity: productData.currentQuantity?.toString() || '',
@@ -881,8 +921,8 @@ export class AddProductComponent implements OnInit {
    */
   calculateValues() {
     if (this.product.unitPrice && this.product.landingChargesPercent) {
-      const unitPrice = parseFloat(this.product.unitPrice);
-      const landingChargesPercent = parseFloat(this.product.landingChargesPercent);
+      const unitPrice = parseFloat(this.product.unitPrice.toString());
+      const landingChargesPercent = parseFloat(this.product.landingChargesPercent.toString());
       
       if (!isNaN(unitPrice) && !isNaN(landingChargesPercent)) {
         // Calculate landing charges
@@ -904,8 +944,8 @@ export class AddProductComponent implements OnInit {
    */
   calculateTargetedSellingPrice() {
     if (this.product.costOfProduct && this.product.profitPercent) {
-      const costOfProduct = parseFloat(this.product.costOfProduct);
-      const profitPercent = parseFloat(this.product.profitPercent);
+      const costOfProduct = parseFloat(this.product.costOfProduct.toString());
+      const profitPercent = parseFloat(this.product.profitPercent.toString());
       
       if (!isNaN(costOfProduct) && !isNaN(profitPercent)) {
         // Calculate targeted selling price
@@ -921,56 +961,28 @@ export class AddProductComponent implements OnInit {
       this.showNotification('Please fill all required fields', 'error');
       return;
     }
-  
+
     this.isSubmitting = true;
     const formData = new FormData();
-  
-    // Create a clean product object with only the necessary data
-    const cleanProductData = {
-      hsnCode: this.product.hsnCode,
-      Product: this.product.Product,
-      ProductCategory: this.product.ProductCategory,
-      uom: this.product.uom,
-      binLocation: this.product.binLocation,
-      unitPrice: this.product.unitPrice,
-      landingChargesPercent: this.product.landingChargesPercent,
-      landingCharges: this.product.landingCharges,
-      costOfProduct: this.product.costOfProduct,
-      profitPercent: this.product.profitPercent,
-      targetedSellingPrice: this.product.targetedSellingPrice,
-      gstApplicable: this.product.gstApplicable,
-      igstPercent: this.product.igstPercent,
-      cgstPercent: this.product.cgstPercent,
-      sgstPercent: this.product.sgstPercent,
-      stockKeepingUnit: this.product.stockKeepingUnit,
-      latestUnitPrice: this.product.latestUnitPrice,
-      latestPODate: this.product.latestPODate,
-      latestPONumber: this.product.latestPONumber,
-      openingStock: this.product.openingStock,
-      currentQuantity: this.product.currentQuantity,
-      thresholdQuantity: this.product.thresholdQuantity,
-      stockLevelAlert: this.product.stockLevelAlert,
-      productDescription: this.product.productDescription
-    };
-  
-    // Append clean data to FormData
-    Object.entries(cleanProductData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
+
+    // Add all non-file fields
+    Object.entries(this.product).forEach(([key, value]) => {
+      if (key !== 'productImage' && value !== null && value !== undefined && value !== '') {
         formData.append(key, value.toString());
       }
     });
-  
-    // Handle image separately
-    if (this.product.productImage) {
+
+    // Add the file last
+    if (this.product.productImage instanceof File) {
       formData.append('productImage', this.product.productImage);
     }
-  
-    // Handle sub-products
-    if (this.subProducts && this.subProducts.length > 0) {
-      formData.append('subProducts', JSON.stringify(this.subProducts));
+
+    // Log form data for debugging
+    console.log('Form data contents:');
+    for (const pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
     }
-  
-    // Determine if we're updating or creating
+
     if (this.isEditMode && this.editProductId) {
       this.productService.updateProduct(this.editProductId, formData).subscribe({
         next: (response) => {
@@ -979,13 +991,12 @@ export class AddProductComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error updating product:', error);
-          this.showNotification('Error updating product', 'error');
-        },
-        complete: () => {
+          this.showNotification(error.message || 'Error updating product', 'error');
           this.isSubmitting = false;
         }
       });
     } else {
+      // Add new product
       this.productService.addProduct(formData).subscribe({
         next: (response) => {
           this.showNotification('Product added successfully!', 'success');
@@ -993,7 +1004,7 @@ export class AddProductComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error adding product:', error);
-          this.showNotification('Error adding product', 'error');
+          this.showNotification(error.message || 'Error adding product', 'error');
         },
         complete: () => {
           this.isSubmitting = false;
@@ -1001,7 +1012,6 @@ export class AddProductComponent implements OnInit {
       });
     }
   }
-  
 
   private getNextSerialNumber(): number {
     const products = JSON.parse(localStorage.getItem('products') || '[]');
@@ -1095,33 +1105,45 @@ export class AddProductComponent implements OnInit {
 
   // Add validation method
   private validateForm(): boolean {
-    // Check required fields
-    if (!this.product.Product || 
-        !this.product.hsnCode || 
-        !this.product.ProductCategory || 
-        !this.product.uom || 
-        !this.product.binLocation || 
-        !this.product.unitPrice || 
-        !this.product.currentQuantity || 
-        !this.product.thresholdQuantity) {
-      return false;
+    const requiredFields = [
+      'hsnCode',
+      'Product',
+      'ProductCategory',
+      'uom',
+      'binLocation',
+      'unitPrice',
+      'currentQuantity',
+      'thresholdQuantity'
+    ] as const;
+
+    const isValid = requiredFields.every((field) => {
+      const value = this.product[field];
+      if (value === null || value === undefined || value === '') {
+        console.log(`Missing required field: ${field}`);
+        return false;
+      }
+      
+      if (typeof value === 'string' && !value.trim()) {
+        console.log(`Empty required field: ${field}`);
+        return false;
+      }
+      
+      if (['unitPrice', 'currentQuantity', 'thresholdQuantity'].includes(field)) {
+        const numValue = parseFloat(value.toString());
+        if (isNaN(numValue) || numValue < 0) {
+          console.log(`Invalid numeric value for field: ${field}`);
+          return false;
+        }
+      }
+      
+      return true;
+    });
+
+    if (!isValid) {
+      console.log('Form validation failed');
     }
 
-    // Validate numeric fields
-    if (isNaN(Number(this.product.unitPrice)) || 
-        isNaN(Number(this.product.currentQuantity)) || 
-        isNaN(Number(this.product.thresholdQuantity))) {
-      return false;
-    }
-
-    // Validate numeric values are positive
-    if (Number(this.product.unitPrice) <= 0 || 
-        Number(this.product.currentQuantity) < 0 || 
-        Number(this.product.thresholdQuantity) < 0) {
-      return false;
-    }
-
-    return true;
+    return isValid;
   }
 
   // Add method to check if form can be submitted

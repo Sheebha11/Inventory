@@ -599,10 +599,7 @@ export class ProductsComponent implements OnInit {
       next: (stats) => {
         this.dashboardStats = stats;
       },
-      error: (error) => {
-        console.error('Error updating dashboard stats:', error);
-        this.showNotification('Error updating dashboard stats', 'error');
-      }
+      
     });
   }
 
@@ -746,79 +743,67 @@ export class ProductsComponent implements OnInit {
 
   // Update the editProduct method
   editProduct(id: number) {
-    const productToEdit = this.dataSource.find(product => product.id === id);
-    
-    if (productToEdit) {
-      const editData = {
-        // Basic Details
-        id: productToEdit.id,
-        materialName: productToEdit.materialName || '',
-        materialCode: productToEdit.materialCode || '',
-        materialCategory: productToEdit.materialCategory || '',
-        description: productToEdit.description || '',
-        
-        // Quantity and Measurements
-        quantity: productToEdit.quantity || 0,
-        unitOfMeasurement: productToEdit.unitOfMeasurement || '',
-        openingStock: productToEdit.openingStock || 0,
-        currentQuantity: productToEdit.quantity || 0,
-        
-        // Stock Management
-        thresholdQuantity: productToEdit.thresholdQuantity || 0,
-        reorderQuantity: productToEdit.reorderQuantity || 0,
-        maximumQuantity: productToEdit.maximumQuantity || 0,
-        stockKeepingUnit: productToEdit.stockKeepingUnit || '',
-        
-        // Location Details
-        locationId: productToEdit.locationId || '',
-        binLocation: productToEdit.binLocation || productToEdit.locationId || '',
-        
-        // Pricing Details
-        unitPrice: productToEdit.unitPrice || 0,
-        landingChargesPercent: productToEdit.landingChargesPercent || 0,
-        landingCharges: productToEdit.landingCharges || 0,
-        costOfProduct: productToEdit.costOfProduct || 0,
-        profitPercent: productToEdit.profitPercent || 0,
-        targetedSellingPrice: productToEdit.targetedSellingPrice || 0,
-        
-        // GST Details
-        gstApplicable: productToEdit.gstApplicable || 'no',
-        gstRate: productToEdit.gstRate || 0,
-        gstAmount: productToEdit.gstAmount || 0,
-        
-        // Additional Details
-        dateAdded: productToEdit.dateAdded || new Date().toISOString(),
-        latestUnitPrice: productToEdit.latestUnitPrice || 0,
-        latestPODate: productToEdit.latestPODate || '',
-        latestPONumber: productToEdit.latestPONumber || '',
-        
-        // Image
-        imageUrl: productToEdit.imageUrl || '',
-        
-        // Status and Alerts
-        stockLevelAlert: productToEdit.stockLevelAlert || 'Normal',
-        status: productToEdit.status || 'Active'
-      };
+    this.productService.getProductById(id).subscribe({
+      next: (productData) => {
+        if (!productData) {
+          this.showNotification('Product not found', 'error');
+          return;
+        }
 
-      try {
-        // Store the complete edit data in localStorage
-        localStorage.setItem('editProduct', JSON.stringify(editData));
-        
-        // Navigate to add-product with edit mode
-        this.router.navigate(['/add-product'], {
-          queryParams: {
-            mode: 'edit',
-            id: id
-          }
-        });
-        
-        console.log('Successfully prepared edit data:', editData);
-      } catch (error) {
-        console.error('Error preparing edit data:', error);
-        this.showNotification('Error preparing product data for edit', 'error');
+        const editData = {
+          id: productData.id,
+          hsnCode: productData.materialCode || productData.hsnCode,
+          Product: productData.materialName || productData.Product,
+          ProductCategory: productData.materialCategory || productData.ProductCategory,
+          uom: productData.unitOfMeasurement || productData.uom,
+          binLocation: productData.locationId || productData.binLocation,
+          unitPrice: productData.unitPrice || 0,
+          landingChargesPercent: productData.landingChargesPercent || 0,
+          landingCharges: productData.landingCharges || 0,
+          costOfProduct: productData.costOfProduct || 0,
+          profitPercent: productData.profitPercent || 0,
+          targetedSellingPrice: productData.targetedSellingPrice || 0,
+          gstApplicable: productData.gstApplicable || 'no',
+          igstPercent: productData.igstPercent || 0,
+          cgstPercent: productData.cgstPercent || 0,
+          sgstPercent: productData.sgstPercent || 0,
+          stockKeepingUnit: productData.stockKeepingUnit || '',
+          latestUnitPrice: productData.latestUnitPrice || 0,
+          latestPODate: this.formatDate(productData.latestPODate),
+          latestPONumber: productData.latestPONumber || '',
+          openingStock: productData.openingStock || 0,
+          currentQuantity: productData.quantity || productData.currentQuantity || 0,
+          thresholdQuantity: productData.thresholdQuantity || 0,
+          stockLevelAlert: productData.stockLevelAlert || '',
+          productDescription: productData.description || productData.productDescription,
+          imageUrl: productData.imageUrl || ''
+        };
+
+        // Store the data and navigate
+        try {
+          localStorage.setItem('editProduct', JSON.stringify(editData));
+          this.router.navigate(['/add-product'], {
+            queryParams: { mode: 'edit', id: id }
+          });
+        } catch (error) {
+          console.error('Error storing edit data:', error);
+          this.showNotification('Error preparing product data for edit', 'error');
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching product:', error);
+        this.showNotification(error.message || 'Error fetching product', 'error');
       }
-    } else {
-      this.showNotification('Product not found', 'error');
+    });
+  }
+
+  private formatDate(dateString: string): string {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
     }
   }
 
