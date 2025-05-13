@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,6 +16,9 @@ import { finalize } from 'rxjs/operators';
 import moment from 'moment';
 import { FormGroup } from '@angular/forms';
 import { environment } from '../../../environments/environment';
+import { MatSnackBarConfig, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 
 interface SubProduct {
   id: number;
@@ -65,7 +68,9 @@ interface ProductData {
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatTableModule
+    MatTableModule,
+    MatIconModule,
+    MatDialogModule
   ],
   template: `
     <div class="product-form-container">
@@ -771,6 +776,70 @@ interface ProductData {
     .span-2 {
       grid-column: span 2;
     }
+
+   .modal {
+  width: 320px;
+  padding: 24px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  margin: auto;
+}
+
+.modal .icon {
+  width: 64px;
+  height: 64px;
+  background-color: #1976d2; /* blue */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.modal .icon i {
+  color: white;
+  font-size: 32px;
+}
+
+.modal .message {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 24px;
+}
+
+.modal .btn-ok {
+  padding: 10px 24px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal .btn-ok:hover {
+  background-color: #1565c0;
+}
+
+  ::ng-deep .notification-overlay {
+    box-shadow: none !important;
+  }
+  ::ng-deep .notification-overlay .mat-dialog-container {
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  ::ng-deep .cdk-overlay-pane {
+    position: fixed !important;
+    top: 20px !important;
+  }
+      
   `]
 })
 export class AddProductComponent implements OnInit {
@@ -815,6 +884,7 @@ export class AddProductComponent implements OnInit {
   newItemName: string = '';
   isEditMode = false;
   editProductId: number | null = null;
+  private useAlternateNotification = false;
 
 
   constructor(
@@ -822,7 +892,8 @@ export class AddProductComponent implements OnInit {
     private router: Router,
     private snackBar: MatSnackBar,
     private productService: ProductsService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -986,11 +1057,11 @@ export class AddProductComponent implements OnInit {
     if (this.isEditMode && this.editProductId) {
       this.productService.updateProduct(this.editProductId, formData).subscribe({
         next: (response) => {
-          this.showNotification('Product updated successfully!', 'success');
+          this.showNotification('Material added to list!', 'success');
           this.router.navigate(['/products']);
         },
         error: (error) => {
-          console.error('Error updating product:', error);
+          console.error('Error updating material:', error);
           this.showNotification(error.message || 'Error updating product', 'error');
           this.isSubmitting = false;
         }
@@ -999,11 +1070,11 @@ export class AddProductComponent implements OnInit {
       // Add new product
       this.productService.addProduct(formData).subscribe({
         next: (response) => {
-          this.showNotification('Product added successfully!', 'success');
+          this.showNotification('Material added to the list!', 'success');
           this.router.navigate(['/products']);
         },
         error: (error) => {
-          console.error('Error adding product:', error);
+          console.error('Error adding material:', error);
           this.showNotification(error.message || 'Error adding product', 'error');
         },
         complete: () => {
@@ -1019,12 +1090,17 @@ export class AddProductComponent implements OnInit {
   }
 
   private showNotification(message: string, type: 'success' | 'error') {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      horizontalPosition: 'right',
-      verticalPosition: 'top',
-      panelClass: type === 'success' ? ['success-notification'] : ['error-notification']
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      width: 'auto',
+      hasBackdrop: false,
+      panelClass: 'notification-overlay',
+      position: { top: '100px' }, // Changed from '20px' to '100px'
+      data: { message }
     });
+
+    setTimeout(() => {
+      dialogRef.close();
+    }, 3000);
   }
 
   onReset() {
@@ -1153,5 +1229,83 @@ export class AddProductComponent implements OnInit {
 
   removeItem(index: number) {
     this.subProducts.splice(index, 1);
+  }
+}
+
+@Component({
+  selector: 'app-success-dialog',
+  standalone: true,
+  imports: [MatIconModule, CommonModule],
+  template: `
+    <div class="notification-dialog">
+      <div class="notification-content">
+        <div class="check-icon">
+          <mat-icon>check</mat-icon>
+        </div>
+        <div class="notification-message">{{data.message}}</div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .notification-dialog {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      width: 320px;
+      position: fixed;
+      top: 100px; /* Changed from 20px to 100px to add more space above */
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .notification-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .check-icon {
+      width: 64px;
+      height: 64px;
+      background-color: #1976d2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .check-icon mat-icon {
+      color: white;
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+    .notification-message {
+      color: #333;
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    .ok-button {
+      padding: 8px 32px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+  `]
+})
+export class SuccessDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<SuccessDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { message: string }
+  ) {
+    // Auto close after 3 seconds
+    setTimeout(() => {
+      this.dialogRef.close();
+    }, 3000);
   }
 }
